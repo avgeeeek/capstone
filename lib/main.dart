@@ -16,11 +16,15 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/vendor_repository.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/order_repository.dart';
+import 'data/repositories/review_repository.dart';
+import 'data/repositories/search_repository.dart';
+import 'data/repositories/admin_repository.dart';
 import 'data/repositories/notification_repository.dart';
 import 'logic/providers/auth_provider.dart';
+import 'logic/providers/vendor_provider.dart';
 import 'logic/providers/cart_provider.dart';
 import 'logic/providers/order_provider.dart';
-import 'logic/providers/vendor_provider.dart';
+import 'logic/providers/review_provider.dart';
 import 'routes/app_router.dart';
 
 void main() async {
@@ -71,40 +75,48 @@ class CampusEatsApp extends StatelessWidget {
 
     // Repositories
     final authRepository = AuthRepository(authService);
-    final vendorRepository = VendorRepository(firestoreService);
-    final menuRepository = MenuRepository();
-    final orderRepository = OrderRepository();
-    final notificationRepository = NotificationRepository();
+    final vendorRepo = VendorRepository();
+    final menuRepo = MenuRepository();
+    final orderRepo = OrderRepository();
+    final reviewRepo = ReviewRepository();
+    final searchRepo = SearchRepository();
+    final adminRepo = AdminRepository();
+    final notifRepo = NotificationRepository();
 
     return MultiProvider(
       providers: [
+        // Repositories
+        Provider<AuthRepository>.value(value: authRepository),
+        Provider<VendorRepository>.value(value: vendorRepo),
+        Provider<MenuRepository>.value(value: menuRepo),
+        Provider<OrderRepository>.value(value: orderRepo),
+        Provider<ReviewRepository>.value(value: reviewRepo),
+        Provider<SearchRepository>.value(value: searchRepo),
+        Provider<AdminRepository>.value(value: adminRepo),
+        Provider<NotificationRepository>.value(value: notifRepo),
+
+        // Services
+        Provider<FcmService>.value(value: fcmService),
+        Provider<StorageService>.value(value: storageService),
+        Provider<FirestoreService>.value(value: firestoreService),
+        Provider<PaymentService>.value(value: paymentService),
+        Provider<AuthService>.value(value: authService),
+
+        // Providers
         ChangeNotifierProvider(
           create: (_) => AuthProvider(authRepository, fcmService)..init(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => VendorProvider(vendorRepo, orderRepo, fcmService),
+        ),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(
-          create: (_) => OrderProvider(orderRepository, fcmService),
+          create: (_) => OrderProvider(orderRepo, fcmService),
         ),
-        ChangeNotifierProvider(
-          create: (_) => VendorProvider(
-            vendorRepository,
-            orderRepository,
-            fcmService,
-          ),
-        ),
-        Provider.value(value: authService),
-        Provider.value(value: firestoreService),
-        Provider.value(value: fcmService),
-        Provider.value(value: storageService),
-        Provider.value(value: paymentService),
-        Provider.value(value: authRepository),
-        Provider.value(value: vendorRepository),
-        Provider.value(value: menuRepository),
-        Provider.value(value: orderRepository),
-        Provider.value(value: notificationRepository),
+        ChangeNotifierProvider(create: (_) => ReviewProvider(reviewRepo)),
       ],
       child: MaterialApp(
-        title: 'CampusEats',
+        title: 'GrabNgo',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         initialRoute: AppRoutes.splash,

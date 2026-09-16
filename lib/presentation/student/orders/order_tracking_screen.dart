@@ -4,12 +4,15 @@ import '../../../data/models/order_model.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
-import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/order_status_badge.dart';
 import 'order_status_timeline.dart';
 import 'countdown_timer.dart';
 import 'qr_code_display.dart';
+import 'review_dialog.dart';
+import '../../../logic/providers/order_provider.dart';
+import '../../../logic/providers/auth_provider.dart';
+import '../../../core/widgets/custom_button.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
@@ -45,7 +48,7 @@ class OrderTrackingScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Status card
-          _buildStatusCard(order),
+          _buildStatusCard(order, context),
           const SizedBox(height: 20),
 
           // Countdown timer (only when preparing)
@@ -76,17 +79,17 @@ class OrderTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(OrderModel order) {
+  Widget _buildStatusCard(OrderModel order, BuildContext context) {
     final statusColor = _statusColor(order.status);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [statusColor.withOpacity(0.15), statusColor.withOpacity(0.05)],
+          colors: [statusColor.withValues(alpha: 0.15), statusColor.withValues(alpha: 0.05)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -117,8 +120,95 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
             ),
           ],
+
+          if (order.status == ApiConstants.statusPending) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => _showCancelDialog(context, order),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Cancel Order', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+
+          if (order.status == ApiConstants.statusPickedUp) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: CustomButton(
+                text: 'Rate your experience',
+                onPressed: () => _showReviewDialog(context, order),
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context, OrderModel order) {
+    final auth = context.read<AuthProvider>();
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Order', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Are you sure you want to cancel this order?', style: TextStyle(fontFamily: 'Inter')),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Reason (optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('No, keep it'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await context.read<OrderProvider>().cancelOrder(
+                order.id,
+                order.vendorId,
+                auth.userName,
+                reason: reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : null,
+              );
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order cancelled')));
+              }
+            },
+            child: const Text('Yes, Cancel', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReviewDialog(BuildContext context, OrderModel order) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => ReviewDialog(order: order, vendorUserId: order.vendorId),
     );
   }
 
@@ -215,6 +305,7 @@ class OrderTrackingScreen extends StatelessWidget {
       case ApiConstants.statusReady: return AppColors.ready;
       case ApiConstants.statusPickedUp: return AppColors.pickedUp;
       case ApiConstants.statusRejected: return AppColors.rejected;
+      case ApiConstants.statusCancelled: return AppColors.rejected;
       default: return AppColors.textSecondary;
     }
   }
@@ -226,6 +317,7 @@ class OrderTrackingScreen extends StatelessWidget {
       case ApiConstants.statusReady: return Icons.celebration_rounded;
       case ApiConstants.statusPickedUp: return Icons.check_circle_rounded;
       case ApiConstants.statusRejected: return Icons.cancel_rounded;
+      case ApiConstants.statusCancelled: return Icons.block_rounded;
       default: return Icons.info_outline_rounded;
     }
   }
@@ -242,6 +334,8 @@ class OrderTrackingScreen extends StatelessWidget {
         return 'Order complete. Enjoy your meal!';
       case ApiConstants.statusRejected:
         return 'Your order was rejected by the stall.';
+      case ApiConstants.statusCancelled:
+        return 'You cancelled this order.';
       default:
         return 'Order status: ${order.status}';
     }

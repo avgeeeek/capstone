@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/vendor_model.dart';
 import '../../data/models/order_model.dart';
 import '../../data/repositories/vendor_repository.dart';
 import '../../data/repositories/order_repository.dart';
 import '../../data/services/fcm_service.dart';
-import '../../core/constants/api_constants.dart';
 
 enum VendorState { idle, loading, success, error }
 

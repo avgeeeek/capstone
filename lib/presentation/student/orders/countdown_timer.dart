@@ -57,7 +57,7 @@ class _CountdownTimerWidgetState extends State<CountdownTimerWidget>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 16, offset: const Offset(0, 6),
           ),
         ],
@@ -71,7 +71,7 @@ class _CountdownTimerWidgetState extends State<CountdownTimerWidget>
                 animation: _pulseController,
                 builder: (_, __) => Icon(
                   Icons.timer_outlined,
-                  color: Colors.white.withOpacity(0.7 + 0.3 * _pulseController.value),
+                  color: Colors.white.withValues(alpha: 0.7 + 0.3 * _pulseController.value),
                   size: 20,
                 ),
               ),
@@ -87,8 +87,8 @@ class _CountdownTimerWidgetState extends State<CountdownTimerWidget>
           ),
           const SizedBox(height: 12),
           isExpired
-              ? Column(
-                  children: const [
+              ? const Column(
+                  children: [
                     Icon(Icons.celebration_rounded, color: Colors.white, size: 40),
                     SizedBox(height: 6),
                     Text(

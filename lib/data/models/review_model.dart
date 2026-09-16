@@ -7,6 +7,7 @@ class ReviewModel {
   final String vendorId;
   final double rating;
   final String? comment;
+  final String? studentName;
   final DateTime createdAt;
 
   ReviewModel({
@@ -16,6 +17,7 @@ class ReviewModel {
     required this.vendorId,
     required this.rating,
     this.comment,
+    this.studentName,
     required this.createdAt,
   });
 
@@ -27,8 +29,13 @@ class ReviewModel {
       vendorId: map['vendorId'] ?? '',
       rating: (map['rating'] ?? 0.0).toDouble(),
       comment: map['comment'],
+      studentName: map['studentName'],
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
+  }
+
+  factory ReviewModel.fromSnapshot(DocumentSnapshot doc) {
+    return ReviewModel.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
   Map<String, dynamic> toMap() {
@@ -38,7 +45,25 @@ class ReviewModel {
       'vendorId': vendorId,
       'rating': rating,
       'comment': comment,
+      'studentName': studentName,
       'createdAt': Timestamp.fromDate(createdAt),
     };
+  }
+
+  ReviewModel copyWith({
+    double? rating,
+    String? comment,
+    String? studentName,
+  }) {
+    return ReviewModel(
+      id: id,
+      orderId: orderId,
+      studentId: studentId,
+      vendorId: vendorId,
+      rating: rating ?? this.rating,
+      comment: comment ?? this.comment,
+      studentName: studentName ?? this.studentName,
+      createdAt: createdAt,
+    );
   }
 }

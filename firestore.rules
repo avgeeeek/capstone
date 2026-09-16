@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
+    }
+
+    function isVendor() {
+      return isSignedIn() && getUserRole() == 'vendor';
+    }
+
+    function isStudent() {
+      return isSignedIn() && getUserRole() == 'student';
+    }
+
+    // users
+    match /users/{userId} {
+      allow read:   if isSignedIn();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // vendors
+    match /vendors/{vendorId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // menu_items
+    match /menu_items/{itemId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && (isVendor() || isAdmin());
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (isVendor() &&
+          get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.ownerId == request.auth.uid)
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() ||
+        (isVendor() &&
+          get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.ownerId == request.auth.uid)
+      );
+    }
+
+    // orders
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.studentId == request.auth.uid ||
+        isAdmin() ||
+        (isVendor() &&
+          get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.ownerId == request.auth.uid)
+      );
+      allow create: if isStudent();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.studentId == request.auth.uid ||
+        (isVendor() &&
+          get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.ownerId == request.auth.uid)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // notifications - allow create from any signed-in user because
+    // FcmService writes notifications from the client (no Cloud Functions).
+    match /notifications/{notifId} {
+      allow read:   if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // reviews
+    match /reviews/{reviewId} {
+      allow read:   if isSignedIn();
+      allow create: if isStudent();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+  }
+}

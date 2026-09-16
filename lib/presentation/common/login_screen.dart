@@ -28,6 +28,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _navigateToRoleScreen(AuthProvider auth) async {
+    if (auth.isAdmin) {
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.adminDashboard, (r) => false);
+    } else if (auth.isVendor) {
+      final vendorProvider = context.read<VendorProvider>();
+      await vendorProvider.loadVendorByOwnerId(auth.userId);
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.vendorDashboard, (r) => false);
+      }
+    } else {
+      if (auth.isApproved) {
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.studentHome, (r) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.pendingApproval, (r) => false);
+      }
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
@@ -37,17 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     if (!mounted) return;
     if (success) {
-      if (auth.isVendor) {
-        final vendorProvider = context.read<VendorProvider>();
-        await vendorProvider.loadVendorByOwnerId(auth.userId);
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-              context, AppRoutes.vendorDashboard, (r) => false);
-        }
-      } else {
-        Navigator.pushNamedAndRemoveUntil(
-            context, AppRoutes.studentHome, (r) => false);
-      }
+      await _navigateToRoleScreen(auth);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -78,24 +90,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Text('🍽️', style: TextStyle(fontSize: 40)),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  'Welcome back! 👋',
+                  'Welcome back!',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -119,7 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.validateEmail,
-                  prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textHint),
+                  prefixIcon: const Icon(Icons.email_outlined,
+                      color: AppColors.textHint),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 16),
@@ -129,7 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordCtrl,
                   obscureText: true,
                   validator: Validators.validatePassword,
-                  prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textHint),
+                  prefixIcon: const Icon(Icons.lock_outline_rounded,
+                      color: AppColors.textHint),
                   textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: 12),
@@ -155,11 +172,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   isLoading: auth.isLoading,
                 ),
                 const SizedBox(height: 24),
-                Row(
+                const Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Or continue with',
                         style: TextStyle(
@@ -168,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -179,9 +196,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? null
                         : () async {
                             final success = await auth.loginWithGoogle();
-                            if (!mounted) return;
+                            if (!context.mounted) return;
                             if (success) {
-                              Navigator.pushReplacementNamed(context, AppRoutes.splash);
+                              await _navigateToRoleScreen(auth);
                             } else if (auth.errorMessage != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(auth.errorMessage!)),
@@ -193,7 +210,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      side: const BorderSide(color: AppColors.divider, width: 1.5),
+                      side: const BorderSide(
+                          color: AppColors.divider, width: 1.5),
                       backgroundColor: Colors.white,
                     ),
                     child: Row(
@@ -227,7 +245,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.register),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.register),
                       child: const Text(
                         'Sign Up',
                         style: TextStyle(

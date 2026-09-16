@@ -15,14 +15,14 @@ class QrCodeDisplay extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.success.withOpacity(0.4), width: 2),
-        boxShadow: [BoxShadow(color: AppColors.success.withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.4), width: 2),
+        boxShadow: [BoxShadow(color: AppColors.success.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.qr_code_2_rounded, color: AppColors.success, size: 22),
               SizedBox(width: 8),
               Text(

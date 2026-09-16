@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../logic/providers/vendor_provider.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../data/models/menu_item_model.dart';
-import '../../../data/services/storage_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -25,7 +22,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late final TextEditingController _priceCtrl;
   late final TextEditingController _descCtrl;
   late String _selectedCategory;
-  File? _newImage;
   late bool _isAvailable;
   bool _isSaving = false;
 
@@ -141,27 +137,22 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Widget _buildImageSection() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: _newImage != null
-              ? Image.file(_newImage!, fit: BoxFit.cover, width: double.infinity)
-              : widget.item.imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: widget.item.imageUrl!,
-                      fit: BoxFit.cover, width: double.infinity,
-                      placeholder: (_, __) => _imagePlaceholder(),
-                      errorWidget: (_, __, ___) => _imagePlaceholder(),
-                    )
-                  : _imagePlaceholder(),
-        ),
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: widget.item.imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: widget.item.imageUrl!,
+                fit: BoxFit.cover, width: double.infinity,
+                placeholder: (_, __) => _imagePlaceholder(),
+                errorWidget: (_, __, ___) => _imagePlaceholder(),
+              )
+            : _imagePlaceholder(),
       ),
     );
   }
@@ -178,28 +169,16 @@ class _EditItemScreenState extends State<EditItemScreen> {
     ),
   );
 
-  Future<void> _pickImage() async {
-    final storageService = context.read<StorageService>();
-    final file = await storageService.pickImage();
-    if (file != null) setState(() => _newImage = file);
-  }
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
 
     try {
-      String? imageUrl = widget.item.imageUrl;
-
-      if (_newImage != null) {
-        final vendor = context.read<VendorProvider>().vendor;
-        if (vendor != null) {
-          final storageService = context.read<StorageService>();
-          imageUrl = await storageService.uploadMenuImage(_newImage!, vendor.id);
-        }
-      }
-
+      // Keep existing imageUrl unchanged — no upload (Firebase Storage requires Blaze plan)
+      final String? imageUrl = widget.item.imageUrl;
       final menuRepo = context.read<MenuRepository>();
+
       await menuRepo.updateMenuItem(widget.item.id, {
         'name': _nameCtrl.text.trim(),
         'price': double.parse(_priceCtrl.text.trim()),

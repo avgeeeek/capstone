@@ -4,6 +4,7 @@ import '../../logic/providers/auth_provider.dart';
 import '../../logic/providers/vendor_provider.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_strings.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -36,13 +37,28 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigate() async {
+    // Wait for the minimum splash duration in parallel with auth loading
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
 
     final auth = context.read<AuthProvider>();
 
+    // If auth is still initialising, wait for it to finish before routing
+    if (auth.status == AuthStatus.initial || auth.status == AuthStatus.loading) {
+      await Future.doWhile(() async {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return false;
+        final s = context.read<AuthProvider>().status;
+        return s == AuthStatus.initial || s == AuthStatus.loading;
+      });
+    }
+
+    if (!mounted) return;
+
     if (auth.isAuthenticated) {
-      if (auth.isVendor) {
+      if (auth.isAdmin) {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.adminDashboard, (r) => false);
+      } else if (auth.isVendor) {
         // Load vendor data then navigate
         final vendorProvider = context.read<VendorProvider>();
         await vendorProvider.loadVendorByOwnerId(auth.userId);
@@ -51,8 +67,13 @@ class _SplashScreenState extends State<SplashScreen>
             context, AppRoutes.vendorDashboard, (r) => false);
         }
       } else {
-        Navigator.pushNamedAndRemoveUntil(
-          context, AppRoutes.studentHome, (r) => false);
+        if (auth.isApproved) {
+          Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.studentHome, (r) => false);
+        } else {
+          Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.pendingApproval, (r) => false);
+        }
       }
     } else {
       Navigator.pushNamedAndRemoveUntil(
@@ -83,29 +104,30 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     // Logo
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Text(
-                          '🍽️',
-                          style: TextStyle(fontSize: 52),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
                     const Text(
-                      'CampusEats',
+                      AppStrings.appName,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 36,

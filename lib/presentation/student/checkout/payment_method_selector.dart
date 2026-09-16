@@ -33,15 +33,6 @@ class PaymentMethodSelector extends StatelessWidget {
           subtitle: 'Pay instantly via UPI deep link',
           onTap: onSelected,
         ),
-        const SizedBox(height: 10),
-        _PaymentOption(
-          id: ApiConstants.paymentCash,
-          selected: selected,
-          emoji: '💵',
-          title: 'Cash at Counter',
-          subtitle: 'Pay when you pick up your order',
-          onTap: onSelected,
-        ),
       ],
     );
   }

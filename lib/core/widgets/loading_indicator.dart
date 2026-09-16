@@ -60,8 +60,8 @@ class StallShimmerList extends StatelessWidget {
     return ListView.builder(
       itemCount: 4,
       padding: const EdgeInsets.all(16),
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+      itemBuilder: (_, i) => const Padding(
+        padding: EdgeInsets.only(bottom: 16),
         child: ShimmerCard(height: 180),
       ),
     );
@@ -82,7 +82,7 @@ class MenuShimmerGrid extends StatelessWidget {
         mainAxisSpacing: 12,
         childAspectRatio: 0.75,
       ),
-      itemBuilder: (_, i) => ShimmerCard(height: 220),
+      itemBuilder: (_, i) => const ShimmerCard(height: 220),
     );
   }
 }

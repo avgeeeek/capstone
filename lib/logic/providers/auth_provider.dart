@@ -22,6 +22,10 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _status == AuthStatus.loading;
   bool get isStudent => _currentUser?.isStudent ?? false;
   bool get isVendor => _currentUser?.isVendor ?? false;
+  bool get isAdmin => _currentUser?.isAdmin ?? false;
+  bool get isApproved => _currentUser?.isApproved ?? false;
+  bool get isRejected => _currentUser?.isRejected ?? false;
+  bool get isPendingApproval => _currentUser?.isPendingApproval ?? false;
   String get userId => _currentUser?.id ?? '';
   String get userName => _currentUser?.name ?? '';
 

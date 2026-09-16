@@ -5,7 +5,6 @@ import '../../../data/models/vendor_model.dart';
 import '../../../data/models/menu_item_model.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../logic/providers/cart_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/loading_indicator.dart';
@@ -176,9 +175,9 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget _buildCartBar(BuildContext context, CartProvider cart) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
       ),
       child: ElevatedButton(
         onPressed: () => Navigator.pushNamed(context, AppRoutes.cart),
@@ -194,7 +193,7 @@ class _MenuScreenState extends State<MenuScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

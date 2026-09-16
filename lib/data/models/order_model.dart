@@ -15,9 +15,11 @@ class OrderModel {
   final DateTime? acceptedAt;
   final DateTime? readyAt;
   final DateTime? pickedUpAt;
+  final DateTime? cancelledAt;
   final DateTime placedAt;
   final String qrCodeData;
   final String? rejectionReason;
+  final String? cancellationReason;
   // Joined fields (not stored in Firestore, fetched separately)
   String? studentName;
   String? vendorName;
@@ -37,9 +39,11 @@ class OrderModel {
     this.acceptedAt,
     this.readyAt,
     this.pickedUpAt,
+    this.cancelledAt,
     required this.placedAt,
     required this.qrCodeData,
     this.rejectionReason,
+    this.cancellationReason,
     this.studentName,
     this.vendorName,
     this.vendorStallName,
@@ -62,9 +66,11 @@ class OrderModel {
       acceptedAt: (map['acceptedAt'] as Timestamp?)?.toDate(),
       readyAt: (map['readyAt'] as Timestamp?)?.toDate(),
       pickedUpAt: (map['pickedUpAt'] as Timestamp?)?.toDate(),
+      cancelledAt: (map['cancelledAt'] as Timestamp?)?.toDate(),
       placedAt: (map['placedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       qrCodeData: map['qrCodeData'] ?? '',
       rejectionReason: map['rejectionReason'],
+      cancellationReason: map['cancellationReason'],
     );
   }
 
@@ -87,9 +93,11 @@ class OrderModel {
       'acceptedAt': acceptedAt != null ? Timestamp.fromDate(acceptedAt!) : null,
       'readyAt': readyAt != null ? Timestamp.fromDate(readyAt!) : null,
       'pickedUpAt': pickedUpAt != null ? Timestamp.fromDate(pickedUpAt!) : null,
+      'cancelledAt': cancelledAt != null ? Timestamp.fromDate(cancelledAt!) : null,
       'placedAt': Timestamp.fromDate(placedAt),
       'qrCodeData': qrCodeData,
       'rejectionReason': rejectionReason,
+      'cancellationReason': cancellationReason,
     };
   }
 
@@ -101,7 +109,9 @@ class OrderModel {
     DateTime? acceptedAt,
     DateTime? readyAt,
     DateTime? pickedUpAt,
+    DateTime? cancelledAt,
     String? rejectionReason,
+    String? cancellationReason,
     String? qrCodeData,
   }) {
     return OrderModel(
@@ -118,9 +128,11 @@ class OrderModel {
       acceptedAt: acceptedAt ?? this.acceptedAt,
       readyAt: readyAt ?? this.readyAt,
       pickedUpAt: pickedUpAt ?? this.pickedUpAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       placedAt: placedAt,
       qrCodeData: qrCodeData ?? this.qrCodeData,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
       studentName: studentName,
       vendorName: vendorName,
       vendorStallName: vendorStallName,

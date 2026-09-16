@@ -39,9 +39,9 @@ class ProfileScreen extends StatelessWidget {
                 ),
               );
               if (confirm == true && context.mounted) {
+                final nav = Navigator.of(context);
                 await context.read<AuthProvider>().signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context, AppRoutes.login, (r) => false);
+                nav.pushNamedAndRemoveUntil(AppRoutes.login, (r) => false);
               }
             },
           ),

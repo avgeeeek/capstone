@@ -6,6 +6,8 @@ import '../presentation/common/register_screen.dart';
 import '../presentation/common/role_selection_screen.dart';
 import '../presentation/common/forgot_password_screen.dart';
 import '../presentation/common/profile_screen.dart';
+import '../presentation/common/pending_approval_screen.dart';
+import '../presentation/admin/admin_dashboard_screen.dart';
 import '../presentation/student/home/student_home_screen.dart';
 import '../presentation/student/menu/menu_screen.dart';
 import '../presentation/student/cart/cart_screen.dart';
@@ -13,6 +15,9 @@ import '../presentation/student/checkout/checkout_screen.dart';
 import '../presentation/student/orders/order_tracking_screen.dart';
 import '../presentation/student/orders/order_history_screen.dart';
 import '../presentation/student/notifications/notifications_screen.dart';
+import '../presentation/student/search/search_screen.dart';
+import '../presentation/student/reviews/reviews_screen.dart';
+import '../presentation/vendor/onboarding/vendor_onboarding_screen.dart';
 import '../presentation/vendor/dashboard/vendor_dashboard_screen.dart';
 import '../presentation/vendor/menu_management/menu_management_screen.dart';
 import '../presentation/vendor/menu_management/add_item_screen.dart';
@@ -37,6 +42,25 @@ class AppRouter {
         return _build(const ForgotPasswordScreen(), settings);
       case AppRoutes.profile:
         return _build(const ProfileScreen(), settings);
+      case AppRoutes.pendingApproval:
+        return _build(const PendingApprovalScreen(), settings);
+
+      // Admin
+      case AppRoutes.adminDashboard:
+        return _build(const AdminDashboardScreen(), settings);
+
+      // Search & Reviews
+      case AppRoutes.search:
+        return MaterialPageRoute(builder: (_) => const SearchScreen());
+      case AppRoutes.reviews:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => ReviewsScreen(
+            vendorId: args['vendorId'],
+            vendorName: args['vendorName'],
+            averageRating: args['averageRating'],
+          ),
+        );
 
       // Student
       case AppRoutes.studentHome:
@@ -57,6 +81,8 @@ class AppRouter {
         return _build(const NotificationsScreen(), settings);
 
       // Vendor
+      case AppRoutes.vendorOnboarding:
+        return _build(const VendorOnboardingScreen(), settings);
       case AppRoutes.vendorDashboard:
         return _build(const VendorDashboardScreen(), settings);
       case AppRoutes.menuManagement:

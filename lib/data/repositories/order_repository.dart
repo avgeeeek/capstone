@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order_model.dart';
 import '../../core/constants/api_constants.dart';
-import '../../core/utils/helpers.dart';
 
 class OrderRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -68,11 +67,15 @@ class OrderRepository {
     });
   }
 
-  Future<void> cancelOrder(String orderId) async {
+  Future<void> cancelOrder(String orderId, {String? reason}) async {
     await _db
         .collection(ApiConstants.ordersCollection)
         .doc(orderId)
-        .update({'status': ApiConstants.statusCancelled});
+        .update({
+      'status': ApiConstants.statusCancelled,
+      'cancellationReason': reason,
+      'cancelledAt': Timestamp.fromDate(DateTime.now()),
+    });
   }
 
   Future<void> updatePaymentStatus(String orderId, String paymentStatus) async {
@@ -135,7 +138,7 @@ class OrderRepository {
     final batch = _db.batch();
 
     // Vendor 1
-    final v1Id = 'vendor_001';
+    const v1Id = 'vendor_001';
     batch.set(_db.collection('vendors').doc(v1Id), {
       'stallName': 'Spice Garden',
       'ownerId': vendorUserId1,
@@ -149,7 +152,7 @@ class OrderRepository {
     });
 
     // Vendor 2
-    final v2Id = 'vendor_002';
+    const v2Id = 'vendor_002';
     batch.set(_db.collection('vendors').doc(v2Id), {
       'stallName': 'QuickBites',
       'ownerId': vendorUserId2,
@@ -163,7 +166,7 @@ class OrderRepository {
     });
 
     // Vendor 3
-    final v3Id = 'vendor_003';
+    const v3Id = 'vendor_003';
     batch.set(_db.collection('vendors').doc(v3Id), {
       'stallName': 'Café Brew',
       'ownerId': vendorUserId3,

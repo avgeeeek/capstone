@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>🍽️ CampusEats</h1>
+<h1>CampusEats</h1>
 
 <p><strong>Skip the queue. Order smart.</strong></p>
 
@@ -17,31 +17,31 @@
 
 ---
 
-## 📱 Features
+## Features
 
 ### For Students
-- 🏠 **Browse Stalls** — See all open cafeteria stalls with real-time availability
-- 🍕 **Browse Menu** — Filter by category (Meals, Snacks, Beverages, Desserts)
-- 🛒 **Smart Cart** — Add/remove items, view subtotals per stall
-- 💳 **Dual Payment** — Pay via Google Pay (UPI Deep Link) or Cash at Counter
-- ⏱️ **Live Order Tracking** — Countdown timer set by the vendor, updates in real time
-- 📋 **Order History** — View all past orders and their statuses
-- 🔔 **Push Notifications** — Get notified when your order is accepted or ready
+- **Browse Stalls** — See all open cafeteria stalls with real-time availability
+- **Browse Menu** — Filter by category (Meals, Snacks, Beverages, Desserts)
+- **Smart Cart** — Add/remove items, view subtotals per stall
+- **Dual Payment** — Pay via Google Pay (UPI Deep Link) or Cash at Counter
+- **Live Order Tracking** — Countdown timer set by the vendor, updates in real time
+- **Order History** — View all past orders and their statuses
+- **Push Notifications** — Get notified when your order is accepted or ready
 
 ### For Vendors
-- 📊 **Tabbed Dashboard** — Pending, Preparing, and Ready tabs for order management
-- ✅ **Accept Orders** — Set a custom prep time (e.g. 10 min) when accepting
-- 📷 **QR Code Pickup** — Scan student's QR code to confirm pickup and complete order
-- 🧾 **Menu Management** — Add, edit, and toggle availability of menu items with images
-- 📈 **Analytics** — View daily revenue and order stats
+- **Tabbed Dashboard** — Pending, Preparing, and Ready tabs for order management
+- **Accept Orders** — Set a custom prep time (e.g. 10 min) when accepting
+- **QR Code Pickup** — Scan student's QR code to confirm pickup and complete order
+- **Menu Management** — Add, edit, and toggle availability of menu items with images
+- **Analytics** — View daily revenue and order stats
 
 ### Auth
-- 📧 Email & Password (Student or Vendor role selection on sign-up)
-- 🔵 **Google Sign-In** — One-tap login with your college Google account
+- Email & Password (Student or Vendor role selection on sign-up)
+- **Google Sign-In** — One-tap login with your college Google account
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 lib/
@@ -69,7 +69,7 @@ lib/
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Category | Technology |
 |---|---|
@@ -84,7 +84,7 @@ lib/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x+)
@@ -124,24 +124,24 @@ flutter run
 
 ---
 
-## 🔑 Environment Notes
+## Environment Notes
 
 The `google-services.json` and `lib/firebase_options.dart` files contain project-specific Firebase credentials and **are not committed to this repository** (see `.gitignore`). Each developer must set up their own Firebase project or request credentials from the project owner.
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 > _Screenshots to be added after first stable release._
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a capstone project. Contributions are welcome via pull requests. Please open an issue first to discuss major changes.
 
 ---
 
-## 📄 License
+## License
 
 MIT License — see [LICENSE](LICENSE) for details.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/constants/app_strings.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -14,13 +15,30 @@ class RoleSelectionScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                '🍽️',
-                style: TextStyle(fontSize: 64),
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.asset(
+                    'assets/images/app_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
-                'CampusEats',
+                AppStrings.appName,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -44,18 +62,13 @@ class RoleSelectionScreen extends StatelessWidget {
                 subtitle: 'Browse stalls & order food',
                 color: AppColors.primary,
                 onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.register,
-                        arguments: 'student'),
+                    Navigator.pushNamed(context, AppRoutes.register),
               ),
               const SizedBox(height: 16),
-              _RoleCard(
-                emoji: '🏪',
-                title: 'Vendor',
-                subtitle: 'Manage your stall & orders',
-                color: AppColors.secondary,
-                onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.register,
-                        arguments: 'vendor'),
+              const Text(
+                'Note: Vendors must be added by the College Administrator.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter'),
               ),
               const SizedBox(height: 32),
               Row(
@@ -108,9 +121,9 @@ class _RoleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Row(
           children: [
@@ -118,7 +131,7 @@ class _RoleCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(

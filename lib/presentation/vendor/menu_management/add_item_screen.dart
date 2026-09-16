@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../logic/providers/vendor_provider.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../data/models/menu_item_model.dart';
-import '../../../data/services/storage_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -23,7 +21,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _priceCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _categoryCtrl = TextEditingController();
-  File? _pickedImage;
   bool _isAvailable = true;
   bool _isSaving = false;
 
@@ -49,7 +46,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildImagePicker(),
+              _buildNoImageBanner(),
               const SizedBox(height: 20),
               CustomTextField(
                 label: 'Item Name',
@@ -137,51 +134,30 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
-  Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2, style: BorderStyle.solid),
-          image: _pickedImage != null
-              ? DecorationImage(image: FileImage(_pickedImage!), fit: BoxFit.cover)
-              : null,
-        ),
-        child: _pickedImage == null
-            ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 48),
-                  SizedBox(height: 8),
-                  Text('Tap to upload image', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w500, fontFamily: 'Inter')),
-                  Text('(optional)', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter')),
-                ],
-              )
-            : Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _pickedImage = null),
-                    child: Container(
-                      width: 28, height: 28,
-                      decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
-                    ),
-                  ),
-                ),
-              ),
+  Widget _buildNoImageBanner() {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.image_not_supported_outlined, color: AppColors.primary, size: 32),
+          SizedBox(width: 12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('No image upload', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontFamily: 'Inter')),
+              Text('Items use a default food icon', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter')),
+            ],
+          ),
+        ],
       ),
     );
-  }
-
-  Future<void> _pickImage() async {
-    final storageService = context.read<StorageService>();
-    final file = await storageService.pickImage();
-    if (file != null) setState(() => _pickedImage = file);
   }
 
   Future<void> _saveItem() async {
@@ -190,13 +166,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     final vendor = context.read<VendorProvider>().vendor;
     if (vendor == null) return;
+    final menuRepo = context.read<MenuRepository>();
 
     try {
-      String? imageUrl;
-      if (_pickedImage != null) {
-        final storageService = context.read<StorageService>();
-        imageUrl = await storageService.uploadMenuImage(_pickedImage!, vendor.id);
-      }
+      const String? imageUrl = null; // No image upload — Firebase Storage requires Blaze plan
 
       final item = MenuItemModel(
         id: '',
@@ -210,7 +183,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
         rating: 0.0,
       );
 
-      final menuRepo = context.read<MenuRepository>();
       await menuRepo.addMenuItem(item);
 
       if (mounted) {

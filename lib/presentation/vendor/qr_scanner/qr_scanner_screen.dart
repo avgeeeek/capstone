@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../logic/providers/vendor_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
-import '../../../core/widgets/custom_button.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -219,13 +218,6 @@ class QrScannerOverlayShape extends ShapeBorder {
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    Path _getLeftTopPath(Rect rect) {
-      return Path()
-        ..moveTo(rect.left, rect.top + borderLength)
-        ..lineTo(rect.left, rect.top + borderRadius)
-        ..quadraticBezierTo(rect.left, rect.top, rect.left + borderRadius, rect.top)
-        ..lineTo(rect.left + borderLength, rect.top);
-    }
     return Path()
       ..addRect(rect)
       ..addRRect(RRect.fromRectAndRadius(
@@ -237,11 +229,9 @@ class QrScannerOverlayShape extends ShapeBorder {
   @override
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
     final width = rect.width;
-    final borderWidthSize = width / 2;
     final height = rect.height;
-    final borderOffset = borderWidth / 2;
-    final _borderLength = borderLength > cutOutSize / 2 ? cutOutSize / 2 : borderLength;
-    final _cutOutSize = cutOutSize;
+    final borderLength2 = borderLength > cutOutSize / 2 ? cutOutSize / 2 : borderLength;
+    final cutOut = cutOutSize;
 
     final paint = Paint()
       ..color = borderColor
@@ -250,37 +240,37 @@ class QrScannerOverlayShape extends ShapeBorder {
 
     canvas.drawPath(
       Path()
-        ..moveTo(width / 2 - _cutOutSize / 2, height / 2 - _cutOutSize / 2 + _borderLength)
-        ..lineTo(width / 2 - _cutOutSize / 2, height / 2 - _cutOutSize / 2 + borderRadius)
-        ..quadraticBezierTo(width / 2 - _cutOutSize / 2, height / 2 - _cutOutSize / 2, width / 2 - _cutOutSize / 2 + borderRadius, height / 2 - _cutOutSize / 2)
-        ..lineTo(width / 2 - _cutOutSize / 2 + _borderLength, height / 2 - _cutOutSize / 2),
+        ..moveTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2 + borderLength2)
+        ..lineTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2 + borderRadius)
+        ..quadraticBezierTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2, width / 2 - cutOut / 2 + borderRadius, height / 2 - cutOut / 2)
+        ..lineTo(width / 2 - cutOut / 2 + borderLength2, height / 2 - cutOut / 2),
       paint,
     );
 
     canvas.drawPath(
       Path()
-        ..moveTo(width / 2 + _cutOutSize / 2, height / 2 - _cutOutSize / 2 + _borderLength)
-        ..lineTo(width / 2 + _cutOutSize / 2, height / 2 - _cutOutSize / 2 + borderRadius)
-        ..quadraticBezierTo(width / 2 + _cutOutSize / 2, height / 2 - _cutOutSize / 2, width / 2 + _cutOutSize / 2 - borderRadius, height / 2 - _cutOutSize / 2)
-        ..lineTo(width / 2 + _cutOutSize / 2 - _borderLength, height / 2 - _cutOutSize / 2),
+        ..moveTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2 + borderLength2)
+        ..lineTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2 + borderRadius)
+        ..quadraticBezierTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2, width / 2 + cutOut / 2 - borderRadius, height / 2 - cutOut / 2)
+        ..lineTo(width / 2 + cutOut / 2 - borderLength2, height / 2 - cutOut / 2),
       paint,
     );
 
     canvas.drawPath(
       Path()
-        ..moveTo(width / 2 - _cutOutSize / 2, height / 2 + _cutOutSize / 2 - _borderLength)
-        ..lineTo(width / 2 - _cutOutSize / 2, height / 2 + _cutOutSize / 2 - borderRadius)
-        ..quadraticBezierTo(width / 2 - _cutOutSize / 2, height / 2 + _cutOutSize / 2, width / 2 - _cutOutSize / 2 + borderRadius, height / 2 + _cutOutSize / 2)
-        ..lineTo(width / 2 - _cutOutSize / 2 + _borderLength, height / 2 + _cutOutSize / 2),
+        ..moveTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2 - borderLength2)
+        ..lineTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2 - borderRadius)
+        ..quadraticBezierTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2, width / 2 - cutOut / 2 + borderRadius, height / 2 + cutOut / 2)
+        ..lineTo(width / 2 - cutOut / 2 + borderLength2, height / 2 + cutOut / 2),
       paint,
     );
 
     canvas.drawPath(
       Path()
-        ..moveTo(width / 2 + _cutOutSize / 2, height / 2 + _cutOutSize / 2 - _borderLength)
-        ..lineTo(width / 2 + _cutOutSize / 2, height / 2 + _cutOutSize / 2 - borderRadius)
-        ..quadraticBezierTo(width / 2 + _cutOutSize / 2, height / 2 + _cutOutSize / 2, width / 2 + _cutOutSize / 2 - borderRadius, height / 2 + _cutOutSize / 2)
-        ..lineTo(width / 2 + _cutOutSize / 2 - _borderLength, height / 2 + _cutOutSize / 2),
+        ..moveTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2 - borderLength2)
+        ..lineTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2 - borderRadius)
+        ..quadraticBezierTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2, width / 2 + cutOut / 2 - borderRadius, height / 2 + cutOut / 2)
+        ..lineTo(width / 2 + cutOut / 2 - borderLength2, height / 2 + cutOut / 2),
       paint,
     );
 

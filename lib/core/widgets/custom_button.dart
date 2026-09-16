@@ -134,7 +134,6 @@ class CustomButton extends StatelessWidget {
         );
 
       case ButtonVariant.primary:
-      default:
         return ElevatedButton(
           onPressed: isDisabled ? null : onPressed,
           style: ElevatedButton.styleFrom(

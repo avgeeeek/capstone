@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../data/models/menu_item_model.dart';
-import '../../../data/repositories/menu_repository.dart';
 import '../../../core/constants/app_colors.dart';
 import 'toggle_availability_switch.dart';
 
@@ -23,10 +21,10 @@ class MenuItemTileVendor extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: item.isAvailable ? AppColors.surface : AppColors.surface.withOpacity(0.7),
+        color: item.isAvailable ? AppColors.surface : AppColors.surface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: item.isAvailable ? AppColors.border : AppColors.error.withOpacity(0.3),
+          color: item.isAvailable ? AppColors.border : AppColors.error.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

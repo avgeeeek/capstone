@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../logic/providers/cart_provider.dart';
 import '../../../logic/providers/auth_provider.dart';
 import '../../../logic/providers/order_provider.dart';
-import '../../../logic/providers/vendor_provider.dart';
 import '../../../data/repositories/vendor_repository.dart';
 import '../../../data/models/vendor_model.dart';
 import '../../../data/services/payment_service.dart';
@@ -21,7 +20,7 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  String _paymentMethod = ApiConstants.paymentCash;
+  String _paymentMethod = ApiConstants.paymentGpay;
   bool _isPlacingOrder = false;
 
   @override
@@ -54,9 +53,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPlaceOrderBar(BuildContext context, CartProvider cart) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -84,9 +83,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               child: _isPlacingOrder
                   ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                  : Text(
-                      _paymentMethod == ApiConstants.paymentGpay ? 'Pay with Google Pay' : 'Place Order (Cash)',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Inter'),
+                  : const Text(
+                      'Pay with Google Pay',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Inter'),
                     ),
             ),
           ),
@@ -101,65 +100,64 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final orderProvider = context.read<OrderProvider>();
     final paymentService = context.read<PaymentService>();
 
-    // Fetch vendor info to get owner userId for notification
+    // Fetch vendor info (UPI ID + owner ID for notification)
     final vendorRepo = context.read<VendorRepository>();
     VendorModel? vendor;
     try {
       vendor = await vendorRepo.getVendorById(cart.vendorId!);
     } catch (_) {}
 
-    String paymentStatus = ApiConstants.paymentStatusPending;
+    if (!context.mounted) return;
 
-    // Handle GPay
-    if (_paymentMethod == ApiConstants.paymentGpay) {
-      final launched = await paymentService.launchGooglePay(
-        vendorUpiId: cart.vendorUpiId ?? 'campuseats@upi',
-        vendorName: cart.vendorName ?? 'Vendor',
-        amount: cart.total,
-        orderId: 'ORD-${DateTime.now().millisecondsSinceEpoch}',
-        transactionNote: 'Order from ${cart.vendorName}',
-      );
+    // ── UPI payment ────────────────────────────────────────────────────────
+    final result = await paymentService.launchUpiPayment(
+      context: context,
+      vendorUpiId: vendor?.upiId ?? cart.vendorUpiId ?? 'campuseats@upi',
+      vendorName: cart.vendorName ?? 'Vendor',
+      amount: cart.total,
+      orderId: 'CE${DateTime.now().millisecondsSinceEpoch}',
+      transactionNote: 'CampusEats order from ${cart.vendorName}',
+    );
 
-      if (!launched) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Google Pay not available. Please install GPay or use Cash.'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          setState(() => _isPlacingOrder = false);
-          return;
-        }
+    if (!result.launched) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No UPI app found. Please install Google Pay or PhonePe.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
       }
-
-      // Ask user to confirm payment was completed
-      if (mounted) {
-        final confirmed = await paymentService.showPaymentConfirmationDialog(context);
-        paymentStatus = confirmed
-            ? ApiConstants.paymentStatusPaid
-            : ApiConstants.paymentStatusPending;
-      }
+      return;
     }
 
-    if (!mounted) return;
+    // User cancelled the confirmation dialog
+    if (result.userConfirmed != true) {
+      if (context.mounted) {
+        setState(() => _isPlacingOrder = false);
+      }
+      return;
+    }
 
-    // Place order
+    // Payment confirmed — place order in Firestore
+    if (!context.mounted) return;
+
     final orderId = await orderProvider.placeOrder(
       studentId: auth.userId,
       vendorId: cart.vendorId!,
       items: cart.orderItems,
       totalAmount: cart.total,
       paymentMethod: _paymentMethod,
-      paymentStatus: paymentStatus,
+      paymentStatus: ApiConstants.paymentStatusPaid,
       vendorUserId: vendor?.ownerId ?? cart.vendorId!,
       studentName: auth.userName,
     );
 
     setState(() => _isPlacingOrder = false);
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (orderId != null) {
       cart.clearCart();
       Navigator.pushNamedAndRemoveUntil(

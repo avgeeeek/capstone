@@ -25,6 +25,10 @@ class AuthService {
       password: password,
     );
     final uid = credential.user!.uid;
+    
+    // Auto-approve if college email, else false
+    final isApproved = email.toLowerCase().endsWith(ApiConstants.collegeEmailDomain);
+
     final user = UserModel(
       id: uid,
       name: name,
@@ -32,6 +36,7 @@ class AuthService {
       phone: phone,
       role: role,
       collegeId: collegeId,
+      isApproved: isApproved,
       createdAt: DateTime.now(),
     );
     await _db
@@ -59,8 +64,7 @@ class AuthService {
   }
 
   Future<UserModel> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
-    if (googleUser == null) throw Exception('Google Sign-In aborted by user');
+    final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
     final OAuthCredential credential = GoogleAuthProvider.credential(
       idToken: googleUser.authentication.idToken,
@@ -70,26 +74,91 @@ class AuthService {
     final User? user = userCredential.user;
     if (user == null) throw Exception('Failed to sign in with Google');
 
-    final doc = await _db.collection(ApiConstants.usersCollection).doc(user.uid).get();
+    final email = (user.email ?? '').trim().toLowerCase();
 
+    // 1. Check direct doc by UID
+    final doc = await _db.collection(ApiConstants.usersCollection).doc(user.uid).get();
     if (doc.exists) {
       return UserModel.fromSnapshot(doc);
-    } else {
-      // Create new user record for first-time Google sign-in
-      final newUser = UserModel(
-        id: user.uid,
-        name: user.displayName ?? 'Student',
-        email: user.email ?? '',
-        phone: user.phoneNumber ?? '',
-        role: 'student', // Default role
-        collegeId: '',
-        createdAt: DateTime.now(),
-      );
-      await _db.collection(ApiConstants.usersCollection).doc(user.uid).set(newUser.toMap());
-      return newUser;
     }
-  }
 
+    // 2. Check if an existing profile exists with this email (e.g. created by admin as vendor)
+    if (email.isNotEmpty) {
+      final queryByEmail = await _db
+          .collection(ApiConstants.usersCollection)
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (queryByEmail.docs.isNotEmpty) {
+        final existingDoc = queryByEmail.docs.first;
+        final existingData = existingDoc.data();
+        final oldId = existingDoc.id;
+
+        final migratedUser = UserModel(
+          id: user.uid,
+          name: existingData['name'] ?? user.displayName ?? 'User',
+          email: email,
+          phone: existingData['phone'] ?? user.phoneNumber ?? '',
+          role: existingData['role'] ?? 'student',
+          collegeId: existingData['collegeId'] ?? '',
+          fcmToken: existingData['fcmToken'],
+          photoUrl: existingData['photoUrl'] ?? user.photoURL,
+          isApproved: existingData['isApproved'] ?? false,
+          isRejected: existingData['isRejected'] ?? false,
+          createdAt: (existingData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        );
+
+        // Save under user.uid
+        await _db.collection(ApiConstants.usersCollection).doc(user.uid).set(migratedUser.toMap());
+
+        // If vendor, update ownerId in vendors collection
+        if (migratedUser.isVendor) {
+          final vendorSnap = await _db
+              .collection(ApiConstants.vendorsCollection)
+              .where('ownerId', isEqualTo: oldId)
+              .get();
+          for (final vDoc in vendorSnap.docs) {
+            await _db.collection(ApiConstants.vendorsCollection).doc(vDoc.id).update({
+              'ownerId': user.uid,
+            });
+          }
+
+          final vendorDirect = await _db.collection(ApiConstants.vendorsCollection).doc(oldId).get();
+          if (vendorDirect.exists && !vendorSnap.docs.any((d) => d.id == oldId)) {
+            final vData = vendorDirect.data()!;
+            vData['ownerId'] = user.uid;
+            vData['id'] = user.uid;
+            await _db.collection(ApiConstants.vendorsCollection).doc(user.uid).set(vData);
+            await _db.collection(ApiConstants.vendorsCollection).doc(oldId).delete();
+          }
+        }
+
+        if (oldId != user.uid) {
+          await _db.collection(ApiConstants.usersCollection).doc(oldId).delete();
+        }
+
+        return migratedUser;
+      }
+    }
+
+    // 3. New user registration
+    final isApproved = email.endsWith(ApiConstants.collegeEmailDomain);
+    final newUser = UserModel(
+      id: user.uid,
+      name: user.displayName ?? 'Student',
+      email: email,
+      phone: user.phoneNumber ?? '',
+      role: 'student',
+      collegeId: '',
+      isApproved: isApproved,
+      isRejected: false,
+      photoUrl: user.photoURL,
+      createdAt: DateTime.now(),
+    );
+    await _db.collection(ApiConstants.usersCollection).doc(user.uid).set(newUser.toMap());
+    return newUser;
+  }
 
   Future<UserModel?> getCurrentUserModel() async {
     final user = _auth.currentUser;
@@ -98,8 +167,26 @@ class AuthService {
         .collection(ApiConstants.usersCollection)
         .doc(user.uid)
         .get();
-    if (!doc.exists) return null;
-    return UserModel.fromSnapshot(doc);
+    if (doc.exists) {
+      return UserModel.fromSnapshot(doc);
+    }
+
+    final email = (user.email ?? '').trim().toLowerCase();
+    if (email.isNotEmpty) {
+      final q = await _db
+          .collection(ApiConstants.usersCollection)
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (q.docs.isNotEmpty) {
+        final existingDoc = q.docs.first;
+        final existingData = existingDoc.data();
+        final userModel = UserModel.fromMap(existingData, user.uid);
+        await _db.collection(ApiConstants.usersCollection).doc(user.uid).set(userModel.toMap());
+        return userModel;
+      }
+    }
+    return null;
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

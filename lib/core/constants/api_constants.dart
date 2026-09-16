@@ -33,6 +33,10 @@ class ApiConstants {
   // User Roles
   static const String roleStudent = 'student';
   static const String roleVendor = 'vendor';
+  static const String roleAdmin = 'admin';
+
+  // Auth Constants
+  static const String collegeEmailDomain = '@vitapstudent.ac.in';
 
   // UPI Merchant Category Code for food
   static const String upiMcc = '5812';

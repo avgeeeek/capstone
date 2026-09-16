@@ -4,11 +4,12 @@ import '../constants/app_colors.dart';
 import '../constants/api_constants.dart';
 
 class Helpers {
-  static final _uuid = const Uuid();
+  static const _uuid = Uuid();
 
   static String generateId() => _uuid.v4();
 
-  static String generateOrderId() => 'ORD-${_uuid.v4().substring(0, 8).toUpperCase()}';
+  static String generateOrderId() =>
+      'ORD-${_uuid.v4().substring(0, 8).toUpperCase()}';
 
   static String generateQrData(String orderId) => 'campuseats://order/$orderId';
 

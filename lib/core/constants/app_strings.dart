@@ -1,6 +1,6 @@
 class AppStrings {
   // App
-  static const String appName = 'CampusEats';
+  static const String appName = 'GrabNgo';
   static const String tagline = 'Skip the queue. Order smart.';
 
   // Auth
