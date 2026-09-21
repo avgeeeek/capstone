@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../data/models/order_model.dart';
-import '../../../logic/providers/vendor_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../order_actions/accept_order_dialog.dart';

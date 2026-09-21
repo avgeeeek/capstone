@@ -11,6 +11,9 @@ class VendorModel {
   final String? imageUrl;
   final String location;
   final String phone;
+  final String? openingTime;
+  final String? closingTime;
+  final bool isActive;
 
   VendorModel({
     required this.id,
@@ -23,6 +26,9 @@ class VendorModel {
     this.imageUrl,
     required this.location,
     required this.phone,
+    this.openingTime,
+    this.closingTime,
+    this.isActive = true,
   });
 
   factory VendorModel.fromMap(Map<String, dynamic> map, String id) {
@@ -37,6 +43,9 @@ class VendorModel {
       imageUrl: map['imageUrl'],
       location: map['location'] ?? '',
       phone: map['phone'] ?? '',
+      openingTime: map['openingTime'],
+      closingTime: map['closingTime'],
+      isActive: map['isActive'] ?? true,
     );
   }
 
@@ -55,6 +64,9 @@ class VendorModel {
       'imageUrl': imageUrl,
       'location': location,
       'phone': phone,
+      'openingTime': openingTime,
+      'closingTime': closingTime,
+      'isActive': isActive,
     };
   }
 
@@ -67,6 +79,9 @@ class VendorModel {
     String? imageUrl,
     String? location,
     String? phone,
+    String? openingTime,
+    String? closingTime,
+    bool? isActive,
   }) {
     return VendorModel(
       id: id,
@@ -79,6 +94,9 @@ class VendorModel {
       imageUrl: imageUrl ?? this.imageUrl,
       location: location ?? this.location,
       phone: phone ?? this.phone,
+      openingTime: openingTime ?? this.openingTime,
+      closingTime: closingTime ?? this.closingTime,
+      isActive: isActive ?? this.isActive,
     );
   }
 

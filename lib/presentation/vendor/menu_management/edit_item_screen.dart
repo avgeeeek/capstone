@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../logic/providers/vendor_provider.dart';
 import '../../../data/repositories/menu_repository.dart';
 import '../../../data/models/menu_item_model.dart';
-import '../../../data/services/storage_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -25,17 +22,25 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late final TextEditingController _priceCtrl;
   late final TextEditingController _descCtrl;
   late String _selectedCategory;
-  File? _newImage;
   late bool _isAvailable;
   bool _isSaving = false;
 
-  final List<String> _categories = ['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Beverages', 'Desserts', 'Other'];
+  final List<String> _categories = [
+    'Breakfast',
+    'Lunch',
+    'Dinner',
+    'Snacks',
+    'Beverages',
+    'Desserts',
+    'Other'
+  ];
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.item.name);
-    _priceCtrl = TextEditingController(text: widget.item.price.toStringAsFixed(0));
+    _priceCtrl =
+        TextEditingController(text: widget.item.price.toStringAsFixed(0));
     _descCtrl = TextEditingController(text: widget.item.description);
     _selectedCategory = widget.item.category;
     _isAvailable = widget.item.isAvailable;
@@ -71,22 +76,30 @@ class _EditItemScreenState extends State<EditItemScreen> {
               CustomTextField(
                 label: 'Price (₹)',
                 controller: _priceCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 validator: Validators.validatePrice,
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                value: _categories.contains(_selectedCategory) ? _selectedCategory : _categories.first,
+                initialValue: _categories.contains(_selectedCategory)
+                    ? _selectedCategory
+                    : _categories.first,
                 decoration: InputDecoration(
                   labelText: 'Category',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 2),
                   ),
                 ),
-                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (v) => setState(() => _selectedCategory = v ?? _selectedCategory),
+                items: _categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) =>
+                    setState(() => _selectedCategory = v ?? _selectedCategory),
               ),
               const SizedBox(height: 14),
               CustomTextField(
@@ -96,7 +109,8 @@ class _EditItemScreenState extends State<EditItemScreen> {
               ),
               const SizedBox(height: 14),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(12),
@@ -108,19 +122,25 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Available', style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Inter')),
+                        const Text('Available',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter')),
                         Text(
                           _isAvailable ? 'Visible to students' : 'Out of Stock',
                           style: TextStyle(
-                            fontSize: 12, fontFamily: 'Inter',
-                            color: _isAvailable ? AppColors.success : AppColors.error,
+                            fontSize: 12,
+                            fontFamily: 'Inter',
+                            color: _isAvailable
+                                ? AppColors.success
+                                : AppColors.error,
                           ),
                         ),
                       ],
                     ),
                     Switch(
                       value: _isAvailable,
-                      activeColor: AppColors.success,
+                      activeThumbColor: AppColors.success,
                       onChanged: (v) => setState(() => _isAvailable = v),
                     ),
                   ],
@@ -141,65 +161,55 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Widget _buildImageSection() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 180,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: _newImage != null
-              ? Image.file(_newImage!, fit: BoxFit.cover, width: double.infinity)
-              : widget.item.imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: widget.item.imageUrl!,
-                      fit: BoxFit.cover, width: double.infinity,
-                      placeholder: (_, __) => _imagePlaceholder(),
-                      errorWidget: (_, __, ___) => _imagePlaceholder(),
-                    )
-                  : _imagePlaceholder(),
-        ),
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.3), width: 2),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: widget.item.imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: widget.item.imageUrl!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                placeholder: (_, __) => _imagePlaceholder(),
+                errorWidget: (_, __, ___) => _imagePlaceholder(),
+              )
+            : _imagePlaceholder(),
       ),
     );
   }
 
   Widget _imagePlaceholder() => Container(
-    height: 180, color: AppColors.primaryLight,
-    child: const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.add_photo_alternate_rounded, color: AppColors.primary, size: 40),
-        SizedBox(height: 6),
-        Text('Tap to change image', style: TextStyle(color: AppColors.primary, fontFamily: 'Inter', fontWeight: FontWeight.w500)),
-      ],
-    ),
-  );
-
-  Future<void> _pickImage() async {
-    final storageService = context.read<StorageService>();
-    final file = await storageService.pickImage();
-    if (file != null) setState(() => _newImage = file);
-  }
+        height: 180,
+        color: AppColors.primaryLight,
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_photo_alternate_rounded,
+                color: AppColors.primary, size: 40),
+            SizedBox(height: 6),
+            Text('Tap to change image',
+                style: TextStyle(
+                    color: AppColors.primary,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500)),
+          ],
+        ),
+      );
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
 
     try {
-      String? imageUrl = widget.item.imageUrl;
-
-      if (_newImage != null) {
-        final vendor = context.read<VendorProvider>().vendor;
-        if (vendor != null) {
-          final storageService = context.read<StorageService>();
-          imageUrl = await storageService.uploadMenuImage(_newImage!, vendor.id);
-        }
-      }
-
+      // Keep existing imageUrl unchanged — no upload (Firebase Storage requires Blaze plan)
+      final String? imageUrl = widget.item.imageUrl;
       final menuRepo = context.read<MenuRepository>();
+
       await menuRepo.updateMenuItem(widget.item.id, {
         'name': _nameCtrl.text.trim(),
         'price': double.parse(_priceCtrl.text.trim()),
@@ -212,13 +222,19 @@ class _EditItemScreenState extends State<EditItemScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Item updated!'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          const SnackBar(
+              content: Text('Item updated!'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating),
         );
       }
     } finally {

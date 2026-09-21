@@ -23,7 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _collegeIdCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
-  String _selectedRole = 'student';
 
   @override
   void dispose() {
@@ -44,18 +43,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordCtrl.text,
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
-      role: _selectedRole,
+      role: 'student',
       collegeId: _collegeIdCtrl.text.trim(),
     );
     if (!mounted) return;
     if (success) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        _selectedRole == 'vendor'
-            ? AppRoutes.vendorDashboard
-            : AppRoutes.studentHome,
-        (r) => false,
-      );
+      final authService = context.read<AuthProvider>();
+      if (authService.isApproved) {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.studentHome, (r) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.pendingApproval, (r) => false);
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -72,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(color: AppColors.textPrimary),
+        leading: const BackButton(color: AppColors.textPrimary),
         title: const Text('Create Account'),
         elevation: 0,
       ),
@@ -104,21 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // Role Selector
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      _roleButton('student', '🎓 Student'),
-                      _roleButton('vendor', '🏪 Vendor'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+                // Role Selector Removed (Only Students can register here)
 
                 CustomTextField(
                   label: 'Full Name',
@@ -147,14 +131,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 14),
                 CustomTextField(
-                  label: _selectedRole == 'vendor' ? 'Stall Name' : 'College ID',
-                  hint: _selectedRole == 'vendor' ? 'e.g. Spice Garden' : 'e.g. 2021CS001',
+                  label: 'College ID',
+                  hint: 'e.g. 2021CS001',
                   controller: _collegeIdCtrl,
                   validator: Validators.validateCollegeId,
-                  prefixIcon: Icon(
-                    _selectedRole == 'vendor' ? Icons.store_outlined : Icons.badge_outlined,
-                    color: AppColors.textHint,
-                  ),
+                  prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.textHint),
                 ),
                 const SizedBox(height: 14),
                 CustomTextField(
@@ -182,11 +163,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   isLoading: auth.isLoading,
                 ),
                 const SizedBox(height: 24),
-                Row(
+                const Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'Or continue with',
                         style: TextStyle(
@@ -195,7 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -206,7 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ? null
                         : () async {
                             final success = await auth.loginWithGoogle();
-                            if (!mounted) return;
+                            if (!context.mounted) return;
                             if (success) {
                               Navigator.pushReplacementNamed(context, AppRoutes.splash);
                             } else if (auth.errorMessage != null) {
@@ -271,31 +252,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _roleButton(String role, String label) {
-    final isSelected = _selectedRole == role;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedRole = role),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Inter',
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

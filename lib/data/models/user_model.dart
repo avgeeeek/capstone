@@ -9,6 +9,7 @@ class UserModel {
   final String collegeId;
   final String? fcmToken;
   final String? photoUrl;
+  final bool isApproved;
   final DateTime createdAt;
 
   UserModel({
@@ -20,6 +21,7 @@ class UserModel {
     required this.collegeId,
     this.fcmToken,
     this.photoUrl,
+    this.isApproved = false,
     required this.createdAt,
   });
 
@@ -33,6 +35,7 @@ class UserModel {
       collegeId: map['collegeId'] ?? '',
       fcmToken: map['fcmToken'],
       photoUrl: map['photoUrl'],
+      isApproved: map['isApproved'] ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -50,6 +53,7 @@ class UserModel {
       'collegeId': collegeId,
       'fcmToken': fcmToken,
       'photoUrl': photoUrl,
+      'isApproved': isApproved,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -72,10 +76,12 @@ class UserModel {
       collegeId: collegeId ?? this.collegeId,
       fcmToken: fcmToken ?? this.fcmToken,
       photoUrl: photoUrl ?? this.photoUrl,
+      isApproved: isApproved,
       createdAt: createdAt,
     );
   }
 
   bool get isStudent => role == 'student';
   bool get isVendor => role == 'vendor';
+  bool get isAdmin => role == 'admin';
 }

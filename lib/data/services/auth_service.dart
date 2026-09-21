@@ -25,6 +25,10 @@ class AuthService {
       password: password,
     );
     final uid = credential.user!.uid;
+    
+    // Auto-approve if college email, else false
+    final isApproved = email.toLowerCase().endsWith(ApiConstants.collegeEmailDomain);
+
     final user = UserModel(
       id: uid,
       name: name,
@@ -32,6 +36,7 @@ class AuthService {
       phone: phone,
       role: role,
       collegeId: collegeId,
+      isApproved: isApproved,
       createdAt: DateTime.now(),
     );
     await _db
@@ -59,8 +64,7 @@ class AuthService {
   }
 
   Future<UserModel> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
-    if (googleUser == null) throw Exception('Google Sign-In aborted by user');
+    final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
     final OAuthCredential credential = GoogleAuthProvider.credential(
       idToken: googleUser.authentication.idToken,
@@ -75,14 +79,18 @@ class AuthService {
     if (doc.exists) {
       return UserModel.fromSnapshot(doc);
     } else {
+      final email = user.email ?? '';
+      final isApproved = email.toLowerCase().endsWith(ApiConstants.collegeEmailDomain);
+
       // Create new user record for first-time Google sign-in
       final newUser = UserModel(
         id: user.uid,
         name: user.displayName ?? 'Student',
-        email: user.email ?? '',
+        email: email,
         phone: user.phoneNumber ?? '',
         role: 'student', // Default role
         collegeId: '',
+        isApproved: isApproved,
         createdAt: DateTime.now(),
       );
       await _db.collection(ApiConstants.usersCollection).doc(user.uid).set(newUser.toMap());

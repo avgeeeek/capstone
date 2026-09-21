@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/order_model.dart';
 import '../../data/models/order_item_model.dart';
 import '../../data/repositories/order_repository.dart';
@@ -13,7 +12,7 @@ class OrderProvider extends ChangeNotifier {
   final OrderRepository _orderRepository;
   final FcmService _fcmService;
 
-  List<OrderModel> _studentOrders = [];
+  final List<OrderModel> _studentOrders = [];
   OrderModel? _currentOrder;
   OrderState _state = OrderState.idle;
   String? _errorMessage;
@@ -96,9 +95,23 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> cancelOrder(String orderId) async {
+  Future<bool> cancelOrder(
+    String orderId,
+    String vendorUserId,
+    String studentName, {
+    String? reason,
+  }) async {
     try {
-      await _orderRepository.cancelOrder(orderId);
+      await _orderRepository.cancelOrder(orderId, reason: reason);
+      
+      // Notify vendor
+      await _fcmService.notifyOrderCancelled(
+        vendorUserId: vendorUserId,
+        orderId: orderId,
+        studentName: studentName,
+        reason: reason,
+      );
+      
       return true;
     } catch (e) {
       _errorMessage = e.toString();

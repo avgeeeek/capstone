@@ -44,18 +44,13 @@ class RoleSelectionScreen extends StatelessWidget {
                 subtitle: 'Browse stalls & order food',
                 color: AppColors.primary,
                 onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.register,
-                        arguments: 'student'),
+                    Navigator.pushNamed(context, AppRoutes.register),
               ),
               const SizedBox(height: 16),
-              _RoleCard(
-                emoji: '🏪',
-                title: 'Vendor',
-                subtitle: 'Manage your stall & orders',
-                color: AppColors.secondary,
-                onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.register,
-                        arguments: 'vendor'),
+              const Text(
+                'Note: Vendors must be added by the College Administrator.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter'),
               ),
               const SizedBox(height: 32),
               Row(
@@ -108,9 +103,9 @@ class _RoleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Row(
           children: [
@@ -118,7 +113,7 @@ class _RoleCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(

@@ -1,11 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/models/vendor_model.dart';
 import '../../data/models/order_model.dart';
 import '../../data/repositories/vendor_repository.dart';
 import '../../data/repositories/order_repository.dart';
 import '../../data/services/fcm_service.dart';
-import '../../core/constants/api_constants.dart';
+import '../../core/utils/helpers.dart';
 
 enum VendorState { idle, loading, success, error }
 
@@ -135,11 +134,7 @@ class VendorProvider extends ChangeNotifier {
   }
 
   Future<OrderModel?> getOrderByQrData(String qrData) async {
-    // Extract orderId from qrData: campuseats://order/{orderId}
-    String orderId = qrData;
-    if (qrData.startsWith('campuseats://order/')) {
-      orderId = qrData.replaceFirst('campuseats://order/', '');
-    }
+    final orderId = Helpers.extractOrderIdFromQr(qrData);
     return await _orderRepository.getOrderById(orderId);
   }
 

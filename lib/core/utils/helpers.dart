@@ -4,11 +4,10 @@ import '../constants/app_colors.dart';
 import '../constants/api_constants.dart';
 
 class Helpers {
-  static final _uuid = const Uuid();
+  static const _uuid = Uuid();
 
   static String generateId() => _uuid.v4();
 
-  static String generateOrderId() => 'ORD-${_uuid.v4().substring(0, 8).toUpperCase()}';
 
   static String generateQrData(String orderId) => 'campuseats://order/$orderId';
 
@@ -87,18 +86,6 @@ class Helpers {
       default:
         return Icons.info_outline_rounded;
     }
-  }
-
-  static String buildUpiUri({
-    required String upiId,
-    required String vendorName,
-    required String transactionNote,
-    required double amount,
-    required String transactionId,
-  }) {
-    final encodedNote = Uri.encodeComponent(transactionNote);
-    final encodedName = Uri.encodeComponent(vendorName);
-    return 'upi://pay?pa=$upiId&pn=$encodedName&tn=$encodedNote&am=${amount.toStringAsFixed(2)}&cu=INR&tr=$transactionId&mc=5812';
   }
 
   static void showLoadingDialog(BuildContext context) {

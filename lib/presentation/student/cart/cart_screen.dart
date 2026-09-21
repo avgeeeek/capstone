@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../logic/providers/cart_provider.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/custom_button.dart';
 import 'cart_item_tile.dart';
 import 'cart_summary.dart';
 

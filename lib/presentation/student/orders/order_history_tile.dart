@@ -19,9 +19,9 @@ class OrderHistoryTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
           border: order.isActive
-              ? Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5)
+              ? Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5)
               : Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -30,7 +30,7 @@ class OrderHistoryTile extends StatelessWidget {
             Container(
               width: 46, height: 46,
               decoration: BoxDecoration(
-                color: _statusColor(order.status).withOpacity(0.12),
+                color: _statusColor(order.status).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(

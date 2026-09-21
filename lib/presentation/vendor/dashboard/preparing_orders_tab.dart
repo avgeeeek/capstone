@@ -1,10 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../data/models/order_model.dart';
-import '../../../logic/providers/vendor_provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../order_actions/mark_ready_button.dart';
 import 'order_card_vendor.dart';

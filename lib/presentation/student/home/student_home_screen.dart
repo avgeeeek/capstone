@@ -21,7 +21,6 @@ class StudentHomeScreen extends StatefulWidget {
 
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   int _bottomNavIndex = 0;
-  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -100,8 +99,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           // Search Bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: SearchBarWidget(
-              onChanged: (q) => setState(() => _searchQuery = q),
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamed(context, AppRoutes.search),
+              child: AbsorbPointer(
+                child: SearchBarWidget(
+                  onChanged: (q) {},
+                ),
+              ),
             ),
           ),
           // Stall List
@@ -149,21 +153,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         }
         var stalls = snap.data ?? [];
 
-        // Filter by search
-        if (_searchQuery.isNotEmpty) {
-          final q = _searchQuery.toLowerCase();
-          stalls = stalls.where((v) {
-            return v.stallName.toLowerCase().contains(q) ||
-                v.cuisine.any((c) => c.toLowerCase().contains(q));
-          }).toList();
-        }
+        // We moved search to a dedicated screen, so we don't filter locally anymore
+        // unless you want to keep the local filter for offline use, but
+        // typically a dedicated screen is better for full text search.
 
         if (stalls.isEmpty) {
-          return EmptyState(
-            title: _searchQuery.isNotEmpty ? 'No stalls found' : 'No stalls open',
-            subtitle: _searchQuery.isNotEmpty
-                ? 'Try a different search term'
-                : 'Check back later when stalls are open',
+          return const EmptyState(
+            title: 'No stalls open',
+            subtitle: 'Check back later when stalls are open',
             icon: Icons.storefront_rounded,
           );
         }

@@ -1,13 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/vendor_model.dart';
-import '../services/firestore_service.dart';
 import '../../core/constants/api_constants.dart';
 
 class VendorRepository {
-  final FirestoreService _firestoreService;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  VendorRepository(this._firestoreService);
+  VendorRepository();
 
   Stream<List<VendorModel>> getOpenVendors() {
     return _db

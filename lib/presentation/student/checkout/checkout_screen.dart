@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../logic/providers/cart_provider.dart';
 import '../../../logic/providers/auth_provider.dart';
 import '../../../logic/providers/order_provider.dart';
-import '../../../logic/providers/vendor_provider.dart';
 import '../../../data/repositories/vendor_repository.dart';
 import '../../../data/models/vendor_model.dart';
 import '../../../data/services/payment_service.dart';
@@ -54,9 +53,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPlaceOrderBar(BuildContext context, CartProvider cart) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -121,7 +120,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (!launched) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Google Pay not available. Please install GPay or use Cash.'),
@@ -135,7 +134,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
 
       // Ask user to confirm payment was completed
-      if (mounted) {
+      if (context.mounted) {
         final confirmed = await paymentService.showPaymentConfirmationDialog(context);
         paymentStatus = confirmed
             ? ApiConstants.paymentStatusPaid
@@ -143,7 +142,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     }
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     // Place order
     final orderId = await orderProvider.placeOrder(
@@ -159,7 +158,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     setState(() => _isPlacingOrder = false);
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (orderId != null) {
       cart.clearCart();
       Navigator.pushNamedAndRemoveUntil(

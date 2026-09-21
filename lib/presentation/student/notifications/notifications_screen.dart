@@ -72,7 +72,7 @@ class _NotifTile extends StatelessWidget {
           color: notif.isRead ? AppColors.surface : AppColors.primaryLight,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: notif.isRead ? AppColors.border : AppColors.primary.withOpacity(0.3),
+            color: notif.isRead ? AppColors.border : AppColors.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -81,7 +81,7 @@ class _NotifTile extends StatelessWidget {
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: _typeColor(notif.type).withOpacity(0.15),
+                color: _typeColor(notif.type).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(child: Text(_typeEmoji(notif.type), style: const TextStyle(fontSize: 20))),
@@ -93,7 +93,7 @@ class _NotifTile extends StatelessWidget {
                 children: [
                   Text(
                     notif.title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary, fontFamily: 'Inter',
                     ),

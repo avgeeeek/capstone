@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/order_model.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/date_formatter.dart';
 
 class OrderStatusTimeline extends StatelessWidget {
@@ -54,7 +53,7 @@ class OrderStatusTimeline extends StatelessWidget {
     ));
 
     if (order.isRejected) {
-      steps.add(_StepData(
+      steps.add(const _StepData(
         label: 'Order Rejected',
         time: '',
         isDone: true,
@@ -143,7 +142,7 @@ class _TimelineStep extends StatelessWidget {
               Container(
                 width: 2, height: 40,
                 margin: const EdgeInsets.symmetric(vertical: 2),
-                color: step.isDone ? step.color.withOpacity(0.4) : AppColors.border,
+                color: step.isDone ? step.color.withValues(alpha: 0.4) : AppColors.border,
               ),
           ],
         ),

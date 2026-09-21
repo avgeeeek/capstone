@@ -7,10 +7,7 @@ class ApiConstants {
   static const String notificationsCollection = 'notifications';
   static const String reviewsCollection = 'reviews';
 
-  // Firebase Storage Paths
-  static const String menuImagesPath = 'menu_images';
-  static const String profileImagesPath = 'profile_images';
-  static const String vendorImagesPath = 'vendor_images';
+
 
   // Order Status Values
   static const String statusPending = 'pending';
@@ -33,8 +30,9 @@ class ApiConstants {
   // User Roles
   static const String roleStudent = 'student';
   static const String roleVendor = 'vendor';
+  static const String roleAdmin = 'admin';
 
-  // UPI Merchant Category Code for food
-  static const String upiMcc = '5812';
-  static const String upiCurrency = 'INR';
+  // Auth Constants
+  static const String collegeEmailDomain = '@vitapstudent.ac.in';
+
 }

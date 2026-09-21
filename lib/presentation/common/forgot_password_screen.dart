@@ -50,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(color: AppColors.textPrimary),
+        leading: const BackButton(color: AppColors.textPrimary),
         title: const Text('Reset Password'),
       ),
       body: SafeArea(

@@ -50,8 +50,8 @@ extension DateTimeExtension on DateTime {
 }
 
 extension ColorExtension on Color {
-  Color get withLowOpacity => withOpacity(0.1);
-  Color get withMidOpacity => withOpacity(0.5);
+  Color get withLowOpacity => withValues(alpha: 0.1);
+  Color get withMidOpacity => withValues(alpha: 0.5);
 }
 
 extension ContextExtension on BuildContext {

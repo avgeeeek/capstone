@@ -42,7 +42,9 @@ class _SplashScreenState extends State<SplashScreen>
     final auth = context.read<AuthProvider>();
 
     if (auth.isAuthenticated) {
-      if (auth.isVendor) {
+      if (auth.isAdmin) {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.adminDashboard, (r) => false);
+      } else if (auth.isVendor) {
         // Load vendor data then navigate
         final vendorProvider = context.read<VendorProvider>();
         await vendorProvider.loadVendorByOwnerId(auth.userId);
@@ -51,8 +53,13 @@ class _SplashScreenState extends State<SplashScreen>
             context, AppRoutes.vendorDashboard, (r) => false);
         }
       } else {
-        Navigator.pushNamedAndRemoveUntil(
-          context, AppRoutes.studentHome, (r) => false);
+        if (auth.isApproved) {
+          Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.studentHome, (r) => false);
+        } else {
+          Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.pendingApproval, (r) => false);
+        }
       }
     } else {
       Navigator.pushNamedAndRemoveUntil(
@@ -90,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),

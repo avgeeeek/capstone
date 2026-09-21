@@ -55,9 +55,9 @@ class _OrderCardVendorState extends State<OrderCardVendor> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
         border: widget.showReadyBadge
-            ? Border.all(color: AppColors.success.withOpacity(0.4), width: 1.5)
+            ? Border.all(color: AppColors.success.withValues(alpha: 0.4), width: 1.5)
             : null,
       ),
       child: Padding(
