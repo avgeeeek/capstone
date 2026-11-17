@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../data/models/order_model.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
-import 'incoming_orders_tab.dart';
 import 'preparing_orders_tab.dart';
 import 'ready_orders_tab.dart';
 import 'completed_orders_tab.dart';
@@ -23,7 +22,7 @@ class _OrderTabsWidgetState extends State<OrderTabsWidget> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -34,8 +33,7 @@ class _OrderTabsWidgetState extends State<OrderTabsWidget> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final pending = widget.orders.where((o) => o.status == ApiConstants.statusPending).toList();
-    final preparing = widget.orders.where((o) => o.status == ApiConstants.statusPreparing).toList();
+    final preparing = widget.orders.where((o) => o.status == ApiConstants.statusPreparing || o.status == ApiConstants.statusPending).toList();
     final ready = widget.orders.where((o) => o.status == ApiConstants.statusReady).toList();
     final completed = widget.orders.where((o) => o.status == ApiConstants.statusPickedUp || o.status == ApiConstants.statusRejected || o.status == ApiConstants.statusCancelled).toList();
 
@@ -47,7 +45,6 @@ class _OrderTabsWidgetState extends State<OrderTabsWidget> with SingleTickerProv
             controller: _tabController,
             isScrollable: true,
             tabs: [
-              _tab('Incoming', pending.length),
               _tab('Preparing', preparing.length),
               _tab('Ready', ready.length),
               _tab('Done', completed.length),
@@ -58,7 +55,6 @@ class _OrderTabsWidgetState extends State<OrderTabsWidget> with SingleTickerProv
           child: TabBarView(
             controller: _tabController,
             children: [
-              IncomingOrdersTab(orders: pending),
               PreparingOrdersTab(orders: preparing),
               ReadyOrdersTab(orders: ready),
               CompletedOrdersTab(orders: completed),

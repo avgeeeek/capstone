@@ -111,7 +111,7 @@ class CampusEatsApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(
-          create: (_) => OrderProvider(orderRepo, fcmService),
+          create: (_) => OrderProvider(orderRepo, fcmService, menuRepo),
         ),
         ChangeNotifierProvider(create: (_) => ReviewProvider(reviewRepo)),
       ],

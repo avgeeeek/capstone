@@ -13,7 +13,7 @@ class PreparingOrdersTab extends StatelessWidget {
     if (orders.isEmpty) {
       return const EmptyState(
         title: 'No orders being prepared',
-        subtitle: 'Accepted orders will appear here',
+        subtitle: 'New orders will appear here after payment',
         icon: Icons.restaurant_rounded,
       );
     }

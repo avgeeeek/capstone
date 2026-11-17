@@ -51,3 +51,5 @@ lib/firebase_options.dart
 
 # Firebase Functions node_modules
 functions/node_modules/
+
+.code-review-graph/

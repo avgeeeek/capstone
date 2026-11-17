@@ -15,6 +15,8 @@ class ItemDetailBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
     final qty = cart.getItemQuantity(item.id);
+    final isUnavailable = !item.isAvailable || item.isOutOfStock;
+    final maxQty = item.hasStockTracking ? item.stockCount! : 99;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -92,22 +94,50 @@ class ItemDetailBottomSheet extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 6),
-                          // Category badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              item.category,
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Inter',
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryLight,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  item.category,
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.timer_outlined, size: 13, color: AppColors.textSecondary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${item.estimatedMinutes ?? 15} mins prep',
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'Inter',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           if (item.rating > 0) Row(
@@ -141,25 +171,73 @@ class ItemDetailBottomSheet extends StatelessWidget {
                             ),
                           ],
                           const SizedBox(height: 16),
-                          if (!item.isAvailable)
+                          // Out-of-stock / unavailable banner
+                          if (isUnavailable)
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: AppColors.errorLight,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
-                                  Icon(Icons.cancel_rounded, color: AppColors.error),
-                                  SizedBox(width: 8),
-                                  Text('This item is currently out of stock',
-                                      style: TextStyle(color: AppColors.error, fontFamily: 'Inter', fontWeight: FontWeight.w500)),
+                                  const Icon(Icons.cancel_rounded, color: AppColors.error),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    item.isOutOfStock
+                                        ? 'This item is currently out of stock'
+                                        : 'This item is currently unavailable',
+                                    style: const TextStyle(
+                                      color: AppColors.error,
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          // Stock info (shown for items that are available)
+                          if (!isUnavailable)
+                            Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: (item.stockCount ?? 0) <= 5
+                                    ? AppColors.warningLight
+                                    : AppColors.primaryLight,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    (item.stockCount ?? 0) <= 5
+                                        ? Icons.warning_amber_rounded
+                                        : Icons.inventory_2_rounded,
+                                    color: (item.stockCount ?? 0) <= 5
+                                        ? AppColors.warning
+                                        : AppColors.primary,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    (item.stockCount ?? 0) <= 5
+                                        ? 'Only ${item.stockCount ?? 0} left — order quickly!'
+                                        : '${item.stockCount ?? 0} items available in stock',
+                                    style: TextStyle(
+                                      color: (item.stockCount ?? 0) <= 5
+                                          ? AppColors.warning
+                                          : AppColors.primary,
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           const SizedBox(height: 24),
                           // Add to cart
-                          if (item.isAvailable)
+                          if (!isUnavailable)
                             qty == 0
                                 ? SizedBox(
                                     width: double.infinity,
@@ -214,9 +292,15 @@ class ItemDetailBottomSheet extends StatelessWidget {
                                       _qtyBtn(Icons.remove_rounded, () => cart.decrement(item.id)),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                                        child: Text('$qty', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, fontFamily: 'Inter')),
+                                        child: Text('$qty',
+                                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, fontFamily: 'Inter')),
                                       ),
-                                      _qtyBtn(Icons.add_rounded, () => cart.increment(item.id), filled: true),
+                                      _qtyBtn(
+                                        Icons.add_rounded,
+                                        qty >= maxQty ? null : () => cart.increment(item.id),
+                                        filled: true,
+                                        disabled: qty >= maxQty,
+                                      ),
                                     ],
                                   ),
                         ],
@@ -232,16 +316,20 @@ class ItemDetailBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _qtyBtn(IconData icon, VoidCallback onTap, {bool filled = false}) => GestureDetector(
-    onTap: onTap,
+  Widget _qtyBtn(IconData icon, VoidCallback? onTap, {bool filled = false, bool disabled = false}) => GestureDetector(
+    onTap: disabled ? null : onTap,
     child: Container(
       width: 48, height: 48,
       decoration: BoxDecoration(
-        color: filled ? AppColors.primary : Colors.transparent,
-        border: Border.all(color: AppColors.primary, width: 2),
+        color: disabled
+            ? AppColors.border
+            : filled ? AppColors.primary : Colors.transparent,
+        border: disabled ? null : Border.all(color: AppColors.primary, width: 2),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: filled ? Colors.white : AppColors.primary, size: 22),
+      child: Icon(icon,
+          color: disabled ? AppColors.textHint : (filled ? Colors.white : AppColors.primary),
+          size: 22),
     ),
   );
 }

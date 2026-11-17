@@ -5,8 +5,13 @@ import '../../../core/utils/date_formatter.dart';
 
 class CountdownTimerWidget extends StatefulWidget {
   final DateTime estimatedReadyAt;
+  final Duration? totalDuration;
 
-  const CountdownTimerWidget({super.key, required this.estimatedReadyAt});
+  const CountdownTimerWidget({
+    super.key,
+    required this.estimatedReadyAt,
+    this.totalDuration,
+  });
 
   @override
   State<CountdownTimerWidget> createState() => _CountdownTimerWidgetState();
@@ -130,14 +135,11 @@ class _CountdownTimerWidgetState extends State<CountdownTimerWidget>
   }
 
   Widget _buildProgressBar() {
-    final totalSeconds = widget.estimatedReadyAt
-        .difference(widget.estimatedReadyAt.subtract(
-            Duration(seconds: widget.estimatedReadyAt
-                .difference(DateTime.now().subtract(_remaining))
-                .inSeconds + _remaining.inSeconds)))
-        .inSeconds;
-    final elapsed = totalSeconds - _remaining.inSeconds;
-    final progress = totalSeconds > 0 ? (elapsed / totalSeconds).clamp(0.0, 1.0) : 0.0;
+    final totalSec = (widget.totalDuration != null && widget.totalDuration!.inSeconds > 0)
+        ? widget.totalDuration!.inSeconds
+        : 15 * 60;
+    final elapsed = (totalSec - _remaining.inSeconds).clamp(0, totalSec);
+    final progress = totalSec > 0 ? (elapsed / totalSec).clamp(0.0, 1.0) : 0.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),

@@ -46,7 +46,7 @@ class OrderStatusTimeline extends StatelessWidget {
     final steps = <_StepData>[];
 
     steps.add(_StepData(
-      label: 'Order Placed',
+      label: 'Order Placed & Payment Done',
       time: DateFormatter.formatTime(order.placedAt),
       isDone: true,
       color: AppColors.success,
@@ -62,18 +62,11 @@ class OrderStatusTimeline extends StatelessWidget {
       return steps;
     }
 
-    final isAccepted = order.isPreparing || order.isReady || order.isPickedUp;
-    steps.add(_StepData(
-      label: 'Accepted by Stall',
-      time: order.acceptedAt != null ? DateFormatter.formatTime(order.acceptedAt!) : '',
-      isDone: isAccepted,
-      color: AppColors.info,
-    ));
-
+    final isPreparing = order.isPreparing || order.isReady || order.isPickedUp;
     steps.add(_StepData(
       label: 'Preparing Your Food',
       time: order.estimatedMinutes != null ? 'Est. ${order.estimatedMinutes} min' : '',
-      isDone: isAccepted,
+      isDone: isPreparing,
       color: AppColors.preparing,
     ));
 

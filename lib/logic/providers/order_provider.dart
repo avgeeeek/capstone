@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../data/models/order_model.dart';
 import '../../data/models/order_item_model.dart';
 import '../../data/repositories/order_repository.dart';
+import '../../data/repositories/menu_repository.dart';
 import '../../data/services/fcm_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/utils/helpers.dart';
@@ -11,6 +12,7 @@ enum OrderState { idle, loading, success, error }
 class OrderProvider extends ChangeNotifier {
   final OrderRepository _orderRepository;
   final FcmService _fcmService;
+  final MenuRepository _menuRepository;
 
   final List<OrderModel> _studentOrders = [];
   OrderModel? _currentOrder;
@@ -18,7 +20,7 @@ class OrderProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _lastPlacedOrderId;
 
-  OrderProvider(this._orderRepository, this._fcmService);
+  OrderProvider(this._orderRepository, this._fcmService, this._menuRepository);
 
   List<OrderModel> get studentOrders => _studentOrders;
   List<OrderModel> get activeOrders =>
@@ -46,11 +48,15 @@ class OrderProvider extends ChangeNotifier {
     required String paymentStatus,
     required String vendorUserId,
     required String studentName,
+    int? estimatedMinutes,
   }) async {
     _setState(OrderState.loading);
     try {
       final orderId = Helpers.generateId();
       final qrData = Helpers.generateQrData(orderId);
+      final now = DateTime.now();
+      final prepMinutes = (estimatedMinutes != null && estimatedMinutes > 0) ? estimatedMinutes : 15;
+      final estimatedReadyAt = now.add(Duration(minutes: prepMinutes));
 
       final order = OrderModel(
         id: orderId,
@@ -58,15 +64,28 @@ class OrderProvider extends ChangeNotifier {
         vendorId: vendorId,
         items: items,
         totalAmount: totalAmount,
-        status: ApiConstants.statusPending,
+        status: ApiConstants.statusPreparing,
         paymentStatus: paymentStatus,
         paymentMethod: paymentMethod,
-        placedAt: DateTime.now(),
+        estimatedMinutes: prepMinutes,
+        estimatedReadyAt: estimatedReadyAt,
+        placedAt: now,
         qrCodeData: qrData,
       );
 
       await _orderRepository.placeOrder(order);
       _lastPlacedOrderId = orderId;
+
+      // Atomically decrement stock for all ordered items
+      try {
+        await _menuRepository.batchDecrementStock(
+          items
+              .map((i) => (itemId: i.itemId, quantity: i.quantity))
+              .toList(),
+        );
+      } catch (_) {
+        // Stock update failure is non-fatal — order is already placed
+      }
 
       // Notify vendor
       await _fcmService.notifyOrderPlaced(

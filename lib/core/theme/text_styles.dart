@@ -4,27 +4,30 @@ import '../constants/app_colors.dart';
 class AppTextStyles {
   // Display
   static const TextStyle displayLarge = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w800,
+    fontSize: 34,
+    fontWeight: FontWeight.w900,
     color: AppColors.textPrimary,
-    height: 1.2,
+    height: 1.15,
     fontFamily: 'Inter',
+    letterSpacing: -1.2,
   );
 
   static const TextStyle displayMedium = TextStyle(
     fontSize: 28,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
     height: 1.2,
     fontFamily: 'Inter',
+    letterSpacing: -0.8,
   );
 
   // Headings
   static const TextStyle h1 = TextStyle(
     fontSize: 24,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
+    letterSpacing: -0.5,
   );
 
   static const TextStyle h2 = TextStyle(
@@ -32,11 +35,12 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
+    letterSpacing: -0.3,
   );
 
   static const TextStyle h3 = TextStyle(
     fontSize: 18,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
   );
@@ -53,7 +57,7 @@ class AppTextStyles {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
-    height: 1.5,
+    height: 1.55,
     fontFamily: 'Inter',
   );
 
@@ -61,7 +65,7 @@ class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
-    height: 1.5,
+    height: 1.55,
     fontFamily: 'Inter',
   );
 
@@ -76,7 +80,7 @@ class AppTextStyles {
   // Labels
   static const TextStyle labelLarge = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     fontFamily: 'Inter',
   );
@@ -91,23 +95,23 @@ class AppTextStyles {
 
   static const TextStyle labelSmall = TextStyle(
     fontSize: 10,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: 1.0,
     fontFamily: 'Inter',
   );
 
   // Price
   static const TextStyle priceText = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     color: AppColors.primary,
     fontFamily: 'Inter',
   );
 
   static const TextStyle priceLarge = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w800,
+    fontSize: 24,
+    fontWeight: FontWeight.w900,
     color: AppColors.primary,
     fontFamily: 'Inter',
   );
@@ -123,16 +127,17 @@ class AppTextStyles {
   // Button
   static const TextStyle button = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.5,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.3,
     fontFamily: 'Inter',
   );
 
   // Countdown
   static const TextStyle countdownLarge = TextStyle(
-    fontSize: 36,
-    fontWeight: FontWeight.w800,
+    fontSize: 38,
+    fontWeight: FontWeight.w900,
     color: AppColors.primary,
     fontFamily: 'Inter',
+    letterSpacing: -1.0,
   );
 }

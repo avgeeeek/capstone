@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
-enum ButtonVariant { primary, secondary, outline, danger, ghost }
+enum ButtonVariant { primary, accent, outline, danger, ghost }
 
-class CustomButton extends StatelessWidget {
+class CustomButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final ButtonVariant variant;
@@ -24,23 +24,49 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.fullWidth = true,
     this.width,
-    this.height = 52,
+    this.height = 54,
     this.prefixIcon,
     this.suffixIcon,
-    this.borderRadius = 12,
+    this.borderRadius = 14,
     this.fontSize = 16,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isDisabled = onPressed == null || isLoading;
+  State<CustomButton> createState() => _CustomButtonState();
+}
 
-    Widget child = isLoading
+class _CustomButtonState extends State<CustomButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pressCtrl;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressCtrl = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.96)
+        .animate(CurvedAnimation(parent: _pressCtrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _pressCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = widget.onPressed == null || widget.isLoading;
+
+    Widget label = widget.isLoading
         ? SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth: 2.5,
               color: _getForegroundColor(),
             ),
           )
@@ -48,74 +74,92 @@ class CustomButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (prefixIcon != null) ...[
-                Icon(prefixIcon, size: 20, color: _getForegroundColor()),
+              if (widget.prefixIcon != null) ...[
+                Icon(widget.prefixIcon,
+                    size: 20, color: _getForegroundColor()),
                 const SizedBox(width: 8),
               ],
               Text(
-                text,
+                widget.text,
                 style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w600,
+                  fontSize: widget.fontSize,
+                  fontWeight: FontWeight.w800,
                   color: _getForegroundColor(),
                   fontFamily: 'Inter',
+                  letterSpacing: 0.2,
                 ),
               ),
-              if (suffixIcon != null) ...[
+              if (widget.suffixIcon != null) ...[
                 const SizedBox(width: 8),
-                Icon(suffixIcon, size: 20, color: _getForegroundColor()),
+                Icon(widget.suffixIcon,
+                    size: 20, color: _getForegroundColor()),
               ],
             ],
           );
 
-    return SizedBox(
-      width: fullWidth ? double.infinity : width,
-      height: height,
-      child: _buildButton(child, isDisabled),
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: GestureDetector(
+        onTapDown: isDisabled ? null : (_) => _pressCtrl.forward(),
+        onTapUp: isDisabled
+            ? null
+            : (_) {
+                _pressCtrl.reverse();
+                widget.onPressed?.call();
+              },
+        onTapCancel: () => _pressCtrl.reverse(),
+        child: SizedBox(
+          width: widget.fullWidth ? double.infinity : widget.width,
+          height: widget.height,
+          child: _buildButton(label, isDisabled),
+        ),
+      ),
     );
   }
 
   Widget _buildButton(Widget child, bool isDisabled) {
-    switch (variant) {
+    switch (widget.variant) {
       case ButtonVariant.outline:
         return OutlinedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : widget.onPressed,
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
             side: BorderSide(
-              color: isDisabled ? AppColors.border : AppColors.primary,
-              width: 1.5,
+              color: isDisabled ? AppColors.borderLight : AppColors.primary,
+              width: 2,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
+            backgroundColor: AppColors.surface,
           ),
           child: child,
         );
 
       case ButtonVariant.danger:
         return ElevatedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : widget.onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.error,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
           ),
           child: child,
         );
 
-      case ButtonVariant.secondary:
+      case ButtonVariant.accent:
         return ElevatedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : widget.onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.secondary,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.textOnAccent,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
+              side: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
           child: child,
@@ -123,11 +167,11 @@ class CustomButton extends StatelessWidget {
 
       case ButtonVariant.ghost:
         return TextButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : widget.onPressed,
           style: TextButton.styleFrom(
             foregroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
           ),
           child: child,
@@ -135,13 +179,13 @@ class CustomButton extends StatelessWidget {
 
       case ButtonVariant.primary:
         return ElevatedButton(
-          onPressed: isDisabled ? null : onPressed,
+          onPressed: isDisabled ? null : widget.onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
           ),
           child: child,
@@ -150,13 +194,14 @@ class CustomButton extends StatelessWidget {
   }
 
   Color _getForegroundColor() {
-    switch (variant) {
+    switch (widget.variant) {
       case ButtonVariant.outline:
       case ButtonVariant.ghost:
         return AppColors.primary;
+      case ButtonVariant.accent:
+        return AppColors.textOnAccent;
       case ButtonVariant.danger:
       case ButtonVariant.primary:
-      case ButtonVariant.secondary:
         return Colors.white;
     }
   }

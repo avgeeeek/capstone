@@ -42,6 +42,17 @@ class CartProvider extends ChangeNotifier {
   List<OrderItemModel> get orderItems =>
       _items.map((i) => i.toOrderItem()).toList();
 
+  /// Maximum estimated preparation time among items currently in cart
+  int get estimatedPrepMinutes {
+    if (_items.isEmpty) return 15;
+    int maxMinutes = 15;
+    for (final item in _items) {
+      final m = item.menuItem.estimatedMinutes ?? 15;
+      if (m > maxMinutes) maxMinutes = m;
+    }
+    return maxMinutes;
+  }
+
   /// Add item — clears cart if from different vendor
   bool addItem(MenuItemModel menuItem, String vendorId, String vendorName,
       String vendorUpiId) {

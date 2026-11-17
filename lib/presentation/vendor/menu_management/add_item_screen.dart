@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_textfield.dart';
+import 'inventory_widgets.dart';
 
 class AddItemScreen extends StatefulWidget {
   const AddItemScreen({super.key});
@@ -21,10 +22,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _priceCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _categoryCtrl = TextEditingController();
-  bool _isAvailable = true;
   bool _isSaving = false;
 
-  final List<String> _categories = ['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Beverages', 'Desserts', 'Other'];
+  // Inventory
+  int _stockCount = 20;
+  int _prepMinutes = 15;
+
+  final List<String> _categories = [
+    'Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Beverages', 'Desserts', 'Other'
+  ];
 
   @override
   void dispose() {
@@ -63,7 +69,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 validator: Validators.validatePrice,
               ),
               const SizedBox(height: 14),
-              // Category dropdown
               DropdownButtonFormField<String>(
                 value: _categoryCtrl.text.isNotEmpty ? _categoryCtrl.text : null,
                 decoration: InputDecoration(
@@ -74,7 +79,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     borderSide: const BorderSide(color: AppColors.primary, width: 2),
                   ),
                 ),
-                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                items: _categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
                 validator: (v) => v == null ? 'Category is required' : null,
                 onChanged: (v) => _categoryCtrl.text = v ?? '',
               ),
@@ -87,37 +94,16 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 validator: (v) => null,
               ),
               const SizedBox(height: 14),
-              // Availability switch
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Available', style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Inter')),
-                        Text(
-                          _isAvailable ? 'Visible to students' : 'Hidden (Out of Stock)',
-                          style: TextStyle(
-                            fontSize: 12, fontFamily: 'Inter',
-                            color: _isAvailable ? AppColors.success : AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: _isAvailable,
-                      activeColor: AppColors.success,
-                      onChanged: (v) => setState(() => _isAvailable = v),
-                    ),
-                  ],
-                ),
+              // Inventory tracking card
+              InventoryCard(
+                stockCount: _stockCount,
+                onChangeCount: (v) => setState(() => _stockCount = v),
+              ),
+              const SizedBox(height: 14),
+              // Preparation time card
+              PrepTimeCard(
+                minutes: _prepMinutes,
+                onChanged: (v) => setState(() => _prepMinutes = v),
               ),
               const SizedBox(height: 28),
               CustomButton(
@@ -151,8 +137,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('No image upload', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontFamily: 'Inter')),
-              Text('Items use a default food icon', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter')),
+              Text('No image upload',
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontFamily: 'Inter')),
+              Text('Items use a default food icon',
+                  style: TextStyle(color: AppColors.textHint, fontSize: 12, fontFamily: 'Inter')),
             ],
           ),
         ],
@@ -169,8 +157,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     final menuRepo = context.read<MenuRepository>();
 
     try {
-      const String? imageUrl = null; // No image upload — Firebase Storage requires Blaze plan
-
       final item = MenuItemModel(
         id: '',
         vendorId: vendor.id,
@@ -178,9 +164,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
         price: double.parse(_priceCtrl.text.trim()),
         category: _categoryCtrl.text,
         description: _descCtrl.text.trim(),
-        imageUrl: imageUrl,
-        isAvailable: _isAvailable,
+        imageUrl: null,
+        isAvailable: _stockCount > 0,
         rating: 0.0,
+        stockCount: _stockCount,
+        estimatedMinutes: _prepMinutes,
       );
 
       await menuRepo.addMenuItem(item);
@@ -188,13 +176,21 @@ class _AddItemScreenState extends State<AddItemScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Item added!'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          const SnackBar(
+            content: Text('Item added!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {

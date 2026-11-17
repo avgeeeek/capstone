@@ -10,6 +10,10 @@ class MenuItemModel {
   final String? imageUrl;
   final bool isAvailable;
   final double rating;
+  /// null = unlimited (no stock tracking), ≥ 0 = tracked quantity
+  final int? stockCount;
+  /// Estimated preparation time in minutes (null = not set)
+  final int? estimatedMinutes;
 
   MenuItemModel({
     required this.id,
@@ -21,9 +25,18 @@ class MenuItemModel {
     this.imageUrl,
     required this.isAvailable,
     required this.rating,
+    this.stockCount,
+    this.estimatedMinutes,
   });
 
+  /// True when item is out of stock (stock is 0 or less)
+  bool get isOutOfStock => (stockCount ?? 0) <= 0;
+  /// True when stock is tracked
+  bool get hasStockTracking => true;
+
   factory MenuItemModel.fromMap(Map<String, dynamic> map, String id) {
+    final parsedStock = (map['stockCount'] as num?)?.toInt() ?? 20;
+    final bool availableInDb = map['isAvailable'] ?? true;
     return MenuItemModel(
       id: id,
       vendorId: map['vendorId'] ?? '',
@@ -32,8 +45,10 @@ class MenuItemModel {
       category: map['category'] ?? 'Other',
       description: map['description'] ?? '',
       imageUrl: map['imageUrl'],
-      isAvailable: map['isAvailable'] ?? true,
+      isAvailable: availableInDb && parsedStock > 0,
       rating: (map['rating'] ?? 0.0).toDouble(),
+      stockCount: parsedStock,
+      estimatedMinutes: (map['estimatedMinutes'] as num?)?.toInt() ?? 15,
     );
   }
 
@@ -51,6 +66,8 @@ class MenuItemModel {
       'imageUrl': imageUrl,
       'isAvailable': isAvailable,
       'rating': rating,
+      'stockCount': stockCount,
+      'estimatedMinutes': estimatedMinutes,
     };
   }
 
@@ -62,6 +79,8 @@ class MenuItemModel {
     String? imageUrl,
     bool? isAvailable,
     double? rating,
+    Object? stockCount = _sentinel,
+    Object? estimatedMinutes = _sentinel,
   }) {
     return MenuItemModel(
       id: id,
@@ -73,6 +92,11 @@ class MenuItemModel {
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,
       rating: rating ?? this.rating,
+      stockCount: stockCount == _sentinel ? this.stockCount : stockCount as int?,
+      estimatedMinutes: estimatedMinutes == _sentinel ? this.estimatedMinutes : estimatedMinutes as int?,
     );
   }
 }
+
+// Sentinel to distinguish "not passed" from null in copyWith
+const Object _sentinel = Object();

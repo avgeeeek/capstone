@@ -32,20 +32,21 @@ class ShimmerCard extends StatelessWidget {
     super.key,
     this.height = 120,
     this.width,
-    this.borderRadius = 16,
+    this.borderRadius = 20,
   });
 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey.shade200,
-      highlightColor: Colors.grey.shade100,
+      baseColor: const Color(0xFFEDE8C0),   // warm cream base
+      highlightColor: const Color(0xFFF8F4D8), // lighter cream highlight
       child: Container(
         height: height,
         width: width ?? double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(color: AppColors.borderLight, width: 1.5),
         ),
       ),
     );
@@ -59,10 +60,10 @@ class StallShimmerList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: 4,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       itemBuilder: (_, i) => const Padding(
-        padding: EdgeInsets.only(bottom: 16),
-        child: ShimmerCard(height: 180),
+        padding: EdgeInsets.only(bottom: 14),
+        child: ShimmerCard(height: 190),
       ),
     );
   }
@@ -98,7 +99,10 @@ class FullScreenLoader extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: AppColors.primary),
+          const CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 3,
+          ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -107,6 +111,7 @@ class FullScreenLoader extends StatelessWidget {
                 color: AppColors.textSecondary,
                 fontSize: 14,
                 fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

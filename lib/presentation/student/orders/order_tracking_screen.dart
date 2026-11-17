@@ -53,7 +53,12 @@ class OrderTrackingScreen extends StatelessWidget {
 
           // Countdown timer (only when preparing)
           if (order.isPreparing && order.estimatedReadyAt != null) ...[
-            CountdownTimerWidget(estimatedReadyAt: order.estimatedReadyAt!),
+            CountdownTimerWidget(
+              estimatedReadyAt: order.estimatedReadyAt!,
+              totalDuration: order.estimatedMinutes != null
+                  ? Duration(minutes: order.estimatedMinutes!)
+                  : null,
+            ),
             const SizedBox(height: 20),
           ],
 
@@ -121,7 +126,7 @@ class OrderTrackingScreen extends StatelessWidget {
             ),
           ],
 
-          if (order.status == ApiConstants.statusPending) ...[
+          if (order.status == ApiConstants.statusPreparing) ...[
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -324,10 +329,8 @@ class OrderTrackingScreen extends StatelessWidget {
 
   String _statusMessage(OrderModel order) {
     switch (order.status) {
-      case ApiConstants.statusPending:
-        return 'Your order has been placed. Waiting for the stall to accept.';
       case ApiConstants.statusPreparing:
-        return 'The stall is preparing your food. Hang tight!';
+        return 'Your order has been received! The stall is now preparing your food.';
       case ApiConstants.statusReady:
         return '🎉 Your food is ready! Show the QR code below to the vendor.';
       case ApiConstants.statusPickedUp:

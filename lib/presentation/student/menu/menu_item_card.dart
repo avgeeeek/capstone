@@ -17,7 +17,7 @@ class MenuItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
     final qty = cart.getItemQuantity(item.id);
-    final isUnavailable = !item.isAvailable;
+    final isUnavailable = !item.isAvailable || item.isOutOfStock;
 
     return GestureDetector(
       onTap: isUnavailable ? null : onTap,
@@ -56,11 +56,11 @@ class MenuItemCard extends StatelessWidget {
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                         child: Container(
                           color: Colors.black38,
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Out of\nStock',
+                              item.isOutOfStock ? 'Out of\nStock' : 'Unavailable',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
                                 fontFamily: 'Inter',
@@ -124,9 +124,78 @@ class MenuItemCard extends StatelessWidget {
                               fontFamily: 'Inter',
                             ),
                           ),
-                          if (!isUnavailable) _buildQuantityControl(context, cart, qty),
+                          if (!isUnavailable)
+                            _buildQuantityControl(context, cart, qty)
+                          else if (item.isOutOfStock)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEDED),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Sold out',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.error,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
                         ],
                       ),
+                      // Stock display
+                      if (!isUnavailable)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                (item.stockCount ?? 0) <= 5
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.inventory_2_rounded,
+                                size: 11,
+                                color: (item.stockCount ?? 0) <= 5
+                                    ? AppColors.warning
+                                    : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                (item.stockCount ?? 0) <= 5
+                                    ? 'Only ${item.stockCount ?? 0} left!'
+                                    : '${item.stockCount ?? 0} in stock',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: (item.stockCount ?? 0) <= 5
+                                      ? AppColors.warning
+                                      : AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (item.isOutOfStock)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.cancel_rounded, size: 11, color: AppColors.error),
+                              SizedBox(width: 3),
+                              Text(
+                                'Out of stock (0 left)',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -139,6 +208,9 @@ class MenuItemCard extends StatelessWidget {
   }
 
   Widget _buildQuantityControl(BuildContext context, CartProvider cart, int qty) {
+    // Cap additions to available stock
+    final maxQty = item.hasStockTracking ? item.stockCount! : 99;
+
     if (qty == 0) {
       return GestureDetector(
         onTap: () => _addToCart(context, cart),
@@ -177,14 +249,18 @@ class MenuItemCard extends StatelessWidget {
           ),
         ),
         GestureDetector(
-          onTap: () => _addToCart(context, cart),
+          onTap: qty >= maxQty ? null : () => _addToCart(context, cart),
           child: Container(
             width: 26, height: 26,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: qty >= maxQty ? AppColors.border : AppColors.primary,
               borderRadius: BorderRadius.circular(7),
             ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+            child: Icon(
+              Icons.add_rounded,
+              color: qty >= maxQty ? AppColors.textHint : Colors.white,
+              size: 16,
+            ),
           ),
         ),
       ],

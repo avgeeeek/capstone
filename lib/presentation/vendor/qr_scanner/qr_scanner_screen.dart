@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +37,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (qrData == null || qrData.isEmpty) return;
 
     if (!qrData.startsWith('campuseats://order/')) {
-       // Not a valid order QR
        return;
     }
 
@@ -71,7 +71,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       return;
     }
 
-    // Valid order ready for pickup
     _showConfirmDialog(order.id, order.studentId);
   }
 
@@ -121,7 +120,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
-                  Navigator.pop(context); // Go back to dashboard
+                  Navigator.pop(context);
                 } else {
                   _showError('Failed to confirm pickup');
                   setState(() => _isProcessing = false);
@@ -141,162 +140,241 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan QR Code'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _handleBarcode,
-          ),
-          // Scanner Overlay
-          Container(
-            decoration: ShapeDecoration(
-              shape: QrScannerOverlayShape(
-                borderColor: AppColors.primary,
-                borderRadius: 20,
-                borderLength: 40,
-                borderWidth: 10,
-                cutOutSize: MediaQuery.of(context).size.width * 0.7,
-              ),
-            ),
-          ),
-          const Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Column(
-              children: [
-                Text(
-                  'Scan Student\'s QR Code',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+      backgroundColor: Colors.black,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final h = constraints.maxHeight;
+          final scanSize = math.min(w * 0.72, 280.0);
+          final center = Offset(w / 2, h * 0.42);
+          final scanRect = Rect.fromCenter(
+            center: center,
+            width: scanSize,
+            height: scanSize,
+          );
+
+          return Stack(
+            children: [
+              // 1. Camera preview
+              Positioned.fill(
+                child: MobileScanner(
+                  controller: _scannerController,
+                  onDetect: _handleBarcode,
                 ),
-                SizedBox(height: 8),
-                Text(
-                  'Align QR code within the frame to confirm pickup',
-                  style: TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'Inter'),
-                ),
-              ],
-            ),
-          ),
-          if (_isProcessing)
-            Container(
-              color: Colors.black54,
-              child: const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
               ),
-            ),
-        ],
+
+              // 2. CustomPainter: Dark mask with smooth rounded cutout and matching corner brackets
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: ScannerOverlayPainter(
+                    scanRect: scanRect,
+                    borderRadius: 22.0,
+                    borderLength: 36.0,
+                    borderWidth: 5.0,
+                    borderColor: AppColors.primary,
+                  ),
+                ),
+              ),
+
+              // 3. Scan line animation inside the frame
+              _ScanLine(scanRect: scanRect),
+
+              // 4. Instructional texts positioned clearly below the frame
+              Positioned(
+                top: scanRect.bottom + 32,
+                left: 20,
+                right: 20,
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Scan Student\'s QR Code',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Align QR code within the frame to confirm pickup',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 5. Processing loader
+              if (_isProcessing)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class QrScannerOverlayShape extends ShapeBorder {
-  final Color borderColor;
-  final double borderWidth;
+/// Single painter that draws the dark background with the rounded cutout
+/// AND the corner brackets at the EXACT same coordinates, eliminating any misalignment.
+class ScannerOverlayPainter extends CustomPainter {
+  final Rect scanRect;
   final double borderRadius;
   final double borderLength;
-  final double cutOutSize;
+  final double borderWidth;
+  final Color borderColor;
+  final Color overlayColor;
 
-  const QrScannerOverlayShape({
-    this.borderColor = Colors.white,
-    this.borderWidth = 3.0,
-    this.borderRadius = 0,
-    this.borderLength = 20,
-    required this.cutOutSize,
+  ScannerOverlayPainter({
+    required this.scanRect,
+    this.borderRadius = 22.0,
+    this.borderLength = 36.0,
+    this.borderWidth = 5.0,
+    this.borderColor = AppColors.primary,
+    this.overlayColor = const Color(0x99000000), // 60% dark overlay
   });
 
   @override
-  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(scanRect, Radius.circular(borderRadius));
 
-  @override
-  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
-    return Path()
-      ..fillType = PathFillType.evenOdd
-      ..addPath(getOuterPath(rect), Offset.zero);
-  }
+    // 1. Dark mask with transparent cutout
+    final bgPaint = Paint()..color = overlayColor;
+    final bgPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..addRRect(rrect)
+      ..fillType = PathFillType.evenOdd;
+    canvas.drawPath(bgPath, bgPaint);
 
-  @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    return Path()
-      ..addRect(rect)
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromCenter(center: rect.center, width: cutOutSize, height: cutOutSize),
-        Radius.circular(borderRadius),
-      ));
-  }
+    // 2. Subtle translucent inner border
+    final borderPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(rrect, borderPaint);
 
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
-    final width = rect.width;
-    final height = rect.height;
-    final borderLength2 = borderLength > cutOutSize / 2 ? cutOutSize / 2 : borderLength;
-    final cutOut = cutOutSize;
-
-    final paint = Paint()
+    // 3. Four corner brackets drawn exactly along the rounded cutout
+    final cornerPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = borderWidth;
+      ..strokeWidth = borderWidth
+      ..strokeCap = StrokeCap.round;
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2 + borderLength2)
-        ..lineTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2 + borderRadius)
-        ..quadraticBezierTo(width / 2 - cutOut / 2, height / 2 - cutOut / 2, width / 2 - cutOut / 2 + borderRadius, height / 2 - cutOut / 2)
-        ..lineTo(width / 2 - cutOut / 2 + borderLength2, height / 2 - cutOut / 2),
-      paint,
-    );
+    final l = scanRect.left;
+    final t = scanRect.top;
+    final r = scanRect.right;
+    final b = scanRect.bottom;
+    final rad = borderRadius;
+    final len = borderLength;
+    const pi = math.pi;
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2 + borderLength2)
-        ..lineTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2 + borderRadius)
-        ..quadraticBezierTo(width / 2 + cutOut / 2, height / 2 - cutOut / 2, width / 2 + cutOut / 2 - borderRadius, height / 2 - cutOut / 2)
-        ..lineTo(width / 2 + cutOut / 2 - borderLength2, height / 2 - cutOut / 2),
-      paint,
-    );
+    // Top-Left corner (starts going down left side, wraps around arc, goes right along top)
+    final tlPath = Path()
+      ..moveTo(l, t + rad + len)
+      ..lineTo(l, t + rad)
+      ..arcTo(Rect.fromLTWH(l, t, 2 * rad, 2 * rad), pi, pi / 2, false)
+      ..lineTo(l + rad + len, t);
+    canvas.drawPath(tlPath, cornerPaint);
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2 - borderLength2)
-        ..lineTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2 - borderRadius)
-        ..quadraticBezierTo(width / 2 - cutOut / 2, height / 2 + cutOut / 2, width / 2 - cutOut / 2 + borderRadius, height / 2 + cutOut / 2)
-        ..lineTo(width / 2 - cutOut / 2 + borderLength2, height / 2 + cutOut / 2),
-      paint,
-    );
+    // Top-Right corner (starts on top side, wraps arc, goes down right side)
+    final trPath = Path()
+      ..moveTo(r - rad - len, t)
+      ..lineTo(r - rad, t)
+      ..arcTo(Rect.fromLTWH(r - 2 * rad, t, 2 * rad, 2 * rad), -pi / 2, pi / 2, false)
+      ..lineTo(r, t + rad + len);
+    canvas.drawPath(trPath, cornerPaint);
 
-    canvas.drawPath(
-      Path()
-        ..moveTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2 - borderLength2)
-        ..lineTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2 - borderRadius)
-        ..quadraticBezierTo(width / 2 + cutOut / 2, height / 2 + cutOut / 2, width / 2 + cutOut / 2 - borderRadius, height / 2 + cutOut / 2)
-        ..lineTo(width / 2 + cutOut / 2 - borderLength2, height / 2 + cutOut / 2),
-      paint,
-    );
+    // Bottom-Right corner (starts on right side, wraps arc, goes left along bottom)
+    final brPath = Path()
+      ..moveTo(r, b - rad - len)
+      ..lineTo(r, b - rad)
+      ..arcTo(Rect.fromLTWH(r - 2 * rad, b - 2 * rad, 2 * rad, 2 * rad), 0, pi / 2, false)
+      ..lineTo(r - rad - len, b);
+    canvas.drawPath(brPath, cornerPaint);
 
-    final bgPaint = Paint()
-      ..color = Colors.black54
-      ..style = PaintingStyle.fill;
-      
-    final bgPath = Path()
-      ..addRect(rect)
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromCenter(center: rect.center, width: cutOutSize, height: cutOutSize),
-        Radius.circular(borderRadius),
-      ))
-      ..fillType = PathFillType.evenOdd;
-      
-    canvas.drawPath(bgPath, bgPaint);
+    // Bottom-Left corner (starts on bottom side, wraps arc, goes up left side)
+    final blPath = Path()
+      ..moveTo(l + rad + len, b)
+      ..lineTo(l + rad, b)
+      ..arcTo(Rect.fromLTWH(l, b - 2 * rad, 2 * rad, 2 * rad), pi / 2, pi / 2, false)
+      ..lineTo(l, b - rad - len);
+    canvas.drawPath(blPath, cornerPaint);
   }
 
   @override
-  ShapeBorder scale(double t) {
-    return QrScannerOverlayShape(
-      borderColor: borderColor,
-      borderWidth: borderWidth * t,
-      borderRadius: borderRadius * t,
-      borderLength: borderLength * t,
-      cutOutSize: cutOutSize * t,
+  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) =>
+      oldDelegate.scanRect != scanRect || oldDelegate.borderColor != borderColor;
+}
+
+/// Animated scan line that sweeps top-to-bottom inside the frame.
+class _ScanLine extends StatefulWidget {
+  final Rect scanRect;
+  const _ScanLine({required this.scanRect});
+
+  @override
+  State<_ScanLine> createState() => _ScanLineState();
+}
+
+class _ScanLineState extends State<_ScanLine> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))
+      ..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) {
+        final y = widget.scanRect.top + 10 + (widget.scanRect.height - 20) * _anim.value;
+        return Positioned(
+          top: y,
+          left: widget.scanRect.left + 16,
+          width: widget.scanRect.width - 32,
+          height: 2,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0),
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        );
+      },
     );
   }
 }

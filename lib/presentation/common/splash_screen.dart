@@ -14,36 +14,69 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late AnimationController _textController;
+  late AnimationController _dotController;
 
+  late Animation<double> _logoScale;
+  late Animation<double> _logoFade;
+  late Animation<Offset> _textSlide;
+  late Animation<double> _textFade;
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+
+    // Logo animation
+    _logoController = AnimationController(
+      duration: const Duration(milliseconds: 900),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0, 0.6)),
+    _logoScale = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
     );
-    _scaleAnimation = Tween<double>(begin: 0.6, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _logoFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+          parent: _logoController,
+          curve: const Interval(0, 0.5, curve: Curves.easeIn)),
     );
-    _controller.forward();
+
+    // Text slide-up
+    _textController = AnimationController(
+      duration: const Duration(milliseconds: 700),
+      vsync: this,
+    );
+    _textSlide = Tween<Offset>(
+      begin: const Offset(0, 0.6),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
+    );
+    _textFade = Tween<double>(begin: 0, end: 1).animate(_textController);
+
+    // Dot bounce loader
+    _dotController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _startSequence();
+  }
+
+  Future<void> _startSequence() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    _logoController.forward();
+    await Future.delayed(const Duration(milliseconds: 500));
+    _textController.forward();
     _navigate();
   }
 
   Future<void> _navigate() async {
-    // Wait for the minimum splash duration in parallel with auth loading
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future.delayed(const Duration(milliseconds: 2600));
     if (!mounted) return;
 
     final auth = context.read<AuthProvider>();
 
-    // If auth is still initialising, wait for it to finish before routing
     if (auth.status == AuthStatus.initial || auth.status == AuthStatus.loading) {
       await Future.doWhile(() async {
         await Future.delayed(const Duration(milliseconds: 100));
@@ -57,105 +90,214 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (auth.isAuthenticated) {
       if (auth.isAdmin) {
-        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.adminDashboard, (r) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.adminDashboard, (r) => false);
       } else if (auth.isVendor) {
-        // Load vendor data then navigate
         final vendorProvider = context.read<VendorProvider>();
         await vendorProvider.loadVendorByOwnerId(auth.userId);
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(
-            context, AppRoutes.vendorDashboard, (r) => false);
+              context, AppRoutes.vendorDashboard, (r) => false);
         }
       } else {
         if (auth.isApproved) {
           Navigator.pushNamedAndRemoveUntil(
-            context, AppRoutes.studentHome, (r) => false);
+              context, AppRoutes.studentHome, (r) => false);
         } else {
           Navigator.pushNamedAndRemoveUntil(
-            context, AppRoutes.pendingApproval, (r) => false);
+              context, AppRoutes.pendingApproval, (r) => false);
         }
       }
     } else {
       Navigator.pushNamedAndRemoveUntil(
-        context, AppRoutes.login, (r) => false);
+          context, AppRoutes.login, (r) => false);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _logoController.dispose();
+    _textController.dispose();
+    _dotController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (_, __) => Opacity(
-              opacity: _fadeAnimation.value,
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Logo
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      AppStrings.appName,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        fontFamily: 'Inter',
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Skip the queue. Order smart.',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    const SizedBox(height: 60),
-                    const CircularProgressIndicator(
-                      color: Colors.white54,
-                      strokeWidth: 2,
-                    ),
-                  ],
-                ),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Decorative blue blobs
+          Positioned(
+            top: -60,
+            right: -60,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
               ),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -80,
+            left: -60,
+            child: Container(
+              width: 260,
+              height: 260,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          // Yellow accent dot
+          Positioned(
+            top: 80,
+            left: 40,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                color: AppColors.accent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 140,
+            right: 50,
+            child: Container(
+              width: 14,
+              height: 14,
+              decoration: const BoxDecoration(
+                color: AppColors.accent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          // Main content
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Logo
+                AnimatedBuilder(
+                  animation: _logoController,
+                  builder: (_, __) => Opacity(
+                    opacity: _logoFade.value,
+                    child: Transform.scale(
+                      scale: _logoScale.value,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(32),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 40,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                // App name + tagline
+                AnimatedBuilder(
+                  animation: _textController,
+                  builder: (_, __) => FadeTransition(
+                    opacity: _textFade,
+                    child: SlideTransition(
+                      position: _textSlide,
+                      child: Column(
+                        children: [
+                          const Text(
+                            AppStrings.appName,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 38,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'Inter',
+                              letterSpacing: -1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Skip the queue. Order smart.',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 64),
+                // Bouncing dot loader
+                AnimatedBuilder(
+                  animation: _dotController,
+                  builder: (_, __) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(3, (i) {
+                      // Stagger offset per dot
+                      final stagger = (i * 0.15).clamp(0.0, 1.0);
+                      final dotAnim = Tween<double>(begin: 0, end: -12).animate(
+                        CurvedAnimation(
+                          parent: _dotController,
+                          curve: Interval(stagger, (stagger + 0.6).clamp(0.0, 1.0),
+                              curve: Curves.easeInOut),
+                        ),
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Transform.translate(
+                          offset: Offset(0, dotAnim.value),
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: i == 1
+                                  ? AppColors.accent
+                                  : AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

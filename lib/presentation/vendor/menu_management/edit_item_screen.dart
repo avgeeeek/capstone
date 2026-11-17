@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_textfield.dart';
+import 'inventory_widgets.dart';
 
 class EditItemScreen extends StatefulWidget {
   final MenuItemModel item;
@@ -22,8 +23,11 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late final TextEditingController _priceCtrl;
   late final TextEditingController _descCtrl;
   late String _selectedCategory;
-  late bool _isAvailable;
   bool _isSaving = false;
+
+  // Inventory
+  late int _stockCount;
+  late int _prepMinutes;
 
   final List<String> _categories = ['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Beverages', 'Desserts', 'Other'];
 
@@ -34,7 +38,8 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _priceCtrl = TextEditingController(text: widget.item.price.toStringAsFixed(0));
     _descCtrl = TextEditingController(text: widget.item.description);
     _selectedCategory = widget.item.category;
-    _isAvailable = widget.item.isAvailable;
+    _stockCount = widget.item.stockCount ?? 20;
+    _prepMinutes = widget.item.estimatedMinutes ?? 15;
   }
 
   @override
@@ -91,36 +96,16 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Available', style: TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Inter')),
-                        Text(
-                          _isAvailable ? 'Visible to students' : 'Out of Stock',
-                          style: TextStyle(
-                            fontSize: 12, fontFamily: 'Inter',
-                            color: _isAvailable ? AppColors.success : AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: _isAvailable,
-                      activeColor: AppColors.success,
-                      onChanged: (v) => setState(() => _isAvailable = v),
-                    ),
-                  ],
-                ),
+              // Inventory tracking card
+              InventoryCard(
+                stockCount: _stockCount,
+                onChangeCount: (v) => setState(() => _stockCount = v),
+              ),
+              const SizedBox(height: 14),
+              // Preparation time card
+              PrepTimeCard(
+                minutes: _prepMinutes,
+                onChanged: (v) => setState(() => _prepMinutes = v),
               ),
               const SizedBox(height: 28),
               CustomButton(
@@ -185,7 +170,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
         'category': _selectedCategory,
         'description': _descCtrl.text.trim(),
         'imageUrl': imageUrl,
-        'isAvailable': _isAvailable,
+        'isAvailable': _stockCount > 0,
+        'stockCount': _stockCount,
+        'estimatedMinutes': _prepMinutes,
       });
 
       if (mounted) {

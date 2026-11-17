@@ -153,6 +153,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       paymentStatus: ApiConstants.paymentStatusPaid,
       vendorUserId: vendor?.ownerId ?? cart.vendorId!,
       studentName: auth.userName,
+      estimatedMinutes: cart.estimatedPrepMinutes,
     );
 
     setState(() => _isPlacingOrder = false);

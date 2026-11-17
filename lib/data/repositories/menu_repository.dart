@@ -50,6 +50,62 @@ class MenuRepository {
         .update({'isAvailable': isAvailable});
   }
 
+  /// Set the tracked stock count for an item.
+  Future<void> updateStockCount(String itemId, int? stockCount) async {
+    final count = (stockCount ?? 0).clamp(0, 99999);
+    await _db
+        .collection(ApiConstants.menuItemsCollection)
+        .doc(itemId)
+        .update({
+      'stockCount': count,
+      'isAvailable': count > 0,
+    });
+  }
+
+  /// Called when an order is placed — atomically decrements stock for each
+  /// ordered item. If any item's stock hits 0, it is auto-marked unavailable.
+  Future<void> batchDecrementStock(
+    List<({String itemId, int quantity})> orderedItems,
+  ) async {
+    try {
+      await _db.runTransaction((tx) async {
+        for (final entry in orderedItems) {
+          final ref = _db
+              .collection(ApiConstants.menuItemsCollection)
+              .doc(entry.itemId);
+          final snap = await tx.get(ref);
+          if (!snap.exists) continue;
+          final data = snap.data()!;
+          final currentStock = (data['stockCount'] as num?)?.toInt() ?? 20;
+          final newStock = (currentStock - entry.quantity).clamp(0, 99999);
+          final updates = <String, dynamic>{
+            'stockCount': newStock,
+            if (newStock <= 0) 'isAvailable': false,
+          };
+          tx.update(ref, updates);
+        }
+      });
+    } catch (_) {
+      // Fallback direct updates if transaction aborts
+      for (final entry in orderedItems) {
+        try {
+          final ref = _db
+              .collection(ApiConstants.menuItemsCollection)
+              .doc(entry.itemId);
+          final snap = await ref.get();
+          if (!snap.exists) continue;
+          final data = snap.data()!;
+          final currentStock = (data['stockCount'] as num?)?.toInt() ?? 20;
+          final newStock = (currentStock - entry.quantity).clamp(0, 99999);
+          await ref.update({
+            'stockCount': newStock,
+            if (newStock <= 0) 'isAvailable': false,
+          });
+        } catch (_) {}
+      }
+    }
+  }
+
   Future<MenuItemModel?> getMenuItemById(String itemId) async {
     final doc = await _db
         .collection(ApiConstants.menuItemsCollection)
