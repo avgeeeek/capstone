@@ -1,8 +1,8 @@
 <div align="center">
 
-<h1>CampusEats</h1>
+<h1>Grab&Go</h1>
 
-<p><strong>Skip the queue. Order smart.</strong></p>
+<p><strong>Made for VIT-AP</strong></p>
 
 <p>A cross-platform Flutter mobile app that eliminates college cafeteria queues by letting students pre-order food from campus stalls and track their orders in real time.</p>
 
