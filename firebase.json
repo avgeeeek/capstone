@@ -1,0 +1,29 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "campuseats-54dc1",
+          "appId": "1:66391236956:android:e61494fa4550f2ded12199",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "campuseats-54dc1",
+          "configurations": {
+            "android": "1:66391236956:android:e61494fa4550f2ded12199"
+          }
+        }
+      }
+    }
+  }
+}
